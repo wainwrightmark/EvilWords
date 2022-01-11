@@ -1,0 +1,224 @@
+﻿@using MudBlazor
+@using System.Collections.Concurrent
+@using System.Collections.Immutable
+
+
+<MudList>
+    @for (var guessResultIndex = 0; guessResultIndex < GameState.PreviousGuesses.Length; guessResultIndex++)
+    {
+        var guessResult = GameState.PreviousGuesses[guessResultIndex];
+        var gri = guessResultIndex;
+
+        <MudListItem>
+            
+            @for (var charResultIndex = 0; charResultIndex < guessResult.Results.Count; charResultIndex++)
+            {
+                var cri = charResultIndex;
+                var charResult = guessResult.Results[charResultIndex];
+
+                <MudButton
+                    Color="charResult.ResultColor.GetColor()"
+                    Variant="Variant.Filled"
+                    OnClick="() => CycleResult(gri, cri)">
+                    @charResult.Character
+                </MudButton>
+            }
+            <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="() => RemoveGuesses(gri)"/>
+
+        </MudListItem>
+    }
+    
+
+    <MudListItem>
+        
+        <MudButtonGroup>
+            <MudTextField
+                @bind-Value="UserGuess"
+                MaxLength="@Settings.WordLength"
+                Placeholder="@(Suggestion?.BestWord ?? "")"
+                HelperText="@(Suggestion?.PossibilityText)"
+                InputMode="InputMode.text"
+                InputType="InputType.Text"
+                Immediate="true"
+                Pattern="@Settings.Pattern"
+                Style="width:fit-content"
+            
+                />
+            <MudIconButton
+                Icon="@Icons.Filled.Add"
+                OnClick="AddGuess"
+                Disabled="!IsGoodGuess()"
+            />
+        </MudButtonGroup>
+
+        
+    </MudListItem>
+
+
+</MudList>
+
+
+@code{
+    public GameState GameState { get; set; } = new(ImmutableArray<GuessResult>.Empty);
+
+    public GameSettings Settings { get; } = GameSettings.FiveLetter;
+
+    private string _userGuess = "";
+
+    public string UserGuess
+    {
+        get => _userGuess;
+        set => _userGuess = value.ToUpperInvariant();
+    }
+
+    /// <inheritdoc />
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        StateChanged();
+    }
+
+    public void RemoveGuesses(int index)
+    {
+        GameState = new GameState(GameState.PreviousGuesses.Take(index).ToImmutableArray());
+        StateChanged();
+    }
+
+    private readonly ConcurrentDictionary<GameState, string> _resultCache =
+        new(
+            new Dictionary<GameState, string>()
+            {
+                { new GameState(ImmutableArray<GuessResult>.Empty), "SOARE" }
+            }
+            );
+
+    public int StochasticSize { get; set; } = 20;
+
+    public Random Random = new();
+
+
+    private readonly record struct SuggestionData(string BestWord, IReadOnlyList<string> RemainingPossibilities )
+    {
+        public string PossibilityText
+        {
+            get
+            {
+                if (RemainingPossibilities.Count == 0)
+                    return "No Possible Solutions";
+                else if (RemainingPossibilities.Count == 1)
+                    return "Only Solution";
+                else if (RemainingPossibilities.Count <= 4)
+                    return $"'{string.Join(", ", RemainingPossibilities)}'";
+                else return $"{RemainingPossibilities.Count} Possible Solutions";
+            }
+        }
+    };
+
+    private SuggestionData? Suggestion { get; set; } = null;
+
+    public string? GetRealGuess()
+    {
+        var guess = UserGuess;
+        if (string.IsNullOrWhiteSpace(guess))
+            guess = Suggestion?.BestWord;
+        if (guess is null)
+            return null;
+
+        guess = new string(guess.Trim().ToUpperInvariant().Where(char.IsLetter).ToArray());
+
+        if(guess.Length != Settings.WordLength || !Settings.PossibleGuesses.Contains(guess))
+            return null;
+
+        return guess;
+    }
+
+    public bool IsGoodGuess() => GetRealGuess() is not null;
+
+    private void AddGuess()
+    {
+        var guess = GetRealGuess();
+        if (guess is null) return;
+
+        var newGuessResult = GuessResult.GetWorstCase(guess, GameState, Settings);
+
+        GuessResult.ScoreWord(guess, guess); //assume guess was correct
+        GameState = GameState.Add(newGuessResult);
+        UserGuess = "";
+        StateChanged();
+    }
+
+    private void ChangeChar(char newCharacter, int resultIndex, int charIndex)
+    {
+        var guess = GameState.PreviousGuesses[resultIndex];
+        var character = guess.Results[charIndex];
+
+        var newChr = character with{Character = newCharacter};
+        var newResults = guess.Results.ToList();
+        newResults[charIndex] = newChr;
+
+        var newGuess = guess with{Results = newResults};
+        var newGameState = GameState with{PreviousGuesses = GameState.PreviousGuesses.SetItem(resultIndex, newGuess)};
+
+        GameState = newGameState;
+
+        StateChanged();
+    }
+
+    private void CycleResult(int resultIndex, int charIndex)
+    {
+        var guess = GameState.PreviousGuesses[resultIndex];
+        var character = guess.Results[charIndex];
+
+        var newChr = character with{ResultColor = character.ResultColor.CycleToNext()};
+        var newResults = guess.Results.ToList();
+        newResults[charIndex] = newChr;
+
+        var newGuess = guess with{Results = newResults};
+        var newGameState = GameState with{PreviousGuesses = GameState.PreviousGuesses.SetItem(resultIndex, newGuess)};
+
+        GameState = newGameState;
+
+        StateChanged();
+    }
+
+    private CancellationTokenSource? _cancellationTokenSource;
+
+    private void StateChanged()
+    {
+        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource = new CancellationTokenSource();
+        Suggestion = null;
+        StateHasChanged();
+
+        try
+        {
+            var bestGuess = Solver.GetBestGuess(GameState,
+                Settings,
+                new SolveSettings(null, StochasticSize,
+                    true,
+                    SolveSettings.FiveLetterOptimalGuesses,
+                    _resultCache
+                    ));
+
+            if(_cancellationTokenSource.IsCancellationRequested)
+                return;
+
+            var gro = GameState.MakeGuessResultOptimizer();
+            var possibilities = Settings.FilterHiddenWords(gro);
+
+            if (possibilities.Count <= 0)
+                bestGuess = "";
+
+            if(_cancellationTokenSource.IsCancellationRequested)
+                return;
+            Suggestion = new SuggestionData(bestGuess, possibilities);
+        }
+        catch
+        {
+            return;
+        }
+
+        StateHasChanged();
+    }
+
+}

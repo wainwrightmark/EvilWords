@@ -1,0 +1,197 @@
+﻿@using System.Collections.Immutable
+@using BlafettisLib
+@using MudBlazor
+
+
+
+<MudList>
+    @for (var guessResultIndex = 0; guessResultIndex < GameState.PreviousGuesses.Length; guessResultIndex++)
+    {
+        var guessResult = GameState.PreviousGuesses[guessResultIndex];
+
+        <MudListItem>
+            
+            @for (var charResultIndex = 0; charResultIndex < guessResult.Results.Count; charResultIndex++)
+            {
+                var charResult = guessResult.Results[charResultIndex];
+
+                <MudButton
+                    Color="charResult.ResultColor.GetColor()"
+                    Variant="Variant.Filled">
+                    @charResult.Character
+                </MudButton>
+            }
+
+        </MudListItem>
+    }
+    
+    @if (IsGameOver)
+    {
+        <MudListItem>
+            @if (GameState.IsWin)
+            {
+                <MudText Typo="Typo.h6">You are victorious!</MudText>
+            }
+            else if(History.Results.Any())
+            {
+                <MudText Typo="Typo.h6">Sorry, honey, the word was</MudText>
+                <MudText Typo="Typo.h2">@History.Results.Last().HiddenWord</MudText>
+            }
+        </MudListItem>
+
+        <MudListItem>
+            <MudButton OnClick="Restart">New Game</MudButton>
+        </MudListItem>
+
+        <MudListItem>
+        
+            <MudChart ChartType="ChartType.Bar" 
+                      ChartOptions="new ChartOptions(){DisableLegend = true, XAxisLines = false, YAxisLines = false}"
+                      ChartSeries="@(new List<ChartSeries>(){
+                                       new (){Data =@History.Results.Select(x=>x.Guesses??0d).ToArray() }
+                                   })"  
+                      XAxisLabels="@History.Results.Select(x=>x.HiddenWord).ToArray()"
+                      Width="100%" 
+                      Height="200px"/>
+
+
+        
+        </MudListItem>
+
+
+    }
+    else
+    {
+        <MudListItem>
+        
+            <MudButtonGroup>
+                <MudTextField
+                    @bind-Value="UserGuess"
+                    MaxLength="@Settings.WordLength"
+                    HelperText="@($"Guess a {Settings.WordLength} letter word.")"
+                    InputMode="InputMode.text"
+                    InputType="InputType.Text"
+                    Immediate="true"
+                    Pattern="@Settings.Pattern"
+                    Style="width:fit-content"/>
+                <MudIconButton
+                    Icon="@Icons.Filled.Add"
+                    OnClick="AddGuess"
+                    Disabled="!IsGoodGuess()"
+                />
+            </MudButtonGroup>
+
+        
+        </MudListItem>
+
+        <MudListItem>
+            <MudButton OnClick="Restart">Restart</MudButton>
+        </MudListItem>
+    }
+    
+
+</MudList>
+<Blafettis @ref="blafettis" duration="8000" elementCount="150" />
+
+@code{
+
+    public RunHistory History { get; set; } =RunHistory.Empty;
+
+    public GameState GameState { get; set; } = GameState.Empty;
+
+    public GameSettings Settings { get; } = GameSettings.FiveLetter;
+
+    public bool IsGameOver { get; set; } = false;
+
+    private string _userGuess = "";
+
+    public string UserGuess
+    {
+        get => _userGuess;
+        set => _userGuess = value.ToUpperInvariant();
+    }
+    
+    
+    public Random Random = new();
+    protected Blafettis blafettis;
+
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (string.IsNullOrWhiteSpace(UserGuess))
+        {
+            GameState = GameState.Empty;
+            UserGuess = Settings.GetRandomHiddenWord(null, Random, true);
+            AddGuess();
+            IsGameOver = false;
+        }
+        
+    }
+
+    public void Restart()
+    {
+        string hiddenWord;
+        var gro = GameState.MakeGuessResultOptimizer();
+        hiddenWord = Settings.GetRandomHiddenWord(gro, Random, true);
+        if (!IsGameOver)
+        {
+            var guessCount = GameState.IsWin ? GameState.PreviousGuesses.Length : null as int?;
+            var gameResult = new GameResult(guessCount, hiddenWord);
+            History = History.Add(gameResult);
+        }
+
+        UserGuess = hiddenWord;
+        GameState = GameState.Empty;
+        AddGuess();
+        IsGameOver = false;
+    }
+
+
+    public string? GetRealGuess()
+    {
+        var guess = UserGuess;
+
+        guess = new string(guess.Trim().ToUpperInvariant().Where(char.IsLetter).ToArray());
+
+        if(guess.Length != Settings.WordLength || !Settings.PossibleGuesses.Contains(guess))
+            return null;
+
+        return guess;
+    }
+
+    public bool IsGoodGuess() => GetRealGuess() is not null;
+
+    private void AddGuess()
+    {
+        var guess = GetRealGuess();
+        if (guess is null) return;
+
+        var newGuessResult = GuessResult.GetWorstCase(guess, GameState, Settings);
+
+        GuessResult.ScoreWord(guess, guess);
+        GameState = GameState.Add(newGuessResult);
+        UserGuess = "";
+
+        if (GameState.IsWin)
+        {
+            IsGameOver = true;
+            var gameResult = new GameResult(GameState.PreviousGuesses.Length, guess);
+            History = History.Add(gameResult);
+            blafettis.RaiseConfetti();  // raise confetti via method
+
+        }
+
+        if (GameState.PreviousGuesses.Length >= Settings.MaxRounds)
+        {
+            var gro = GameState.MakeGuessResultOptimizer();
+            var hiddenWord = Settings.GetRandomHiddenWord(gro, Random, true);
+            IsGameOver = true;
+            var gameResult = new GameResult(null, hiddenWord);
+            History = History.Add(gameResult);
+        }
+    }
+    
+
+}

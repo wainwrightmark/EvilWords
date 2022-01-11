@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+	  <BlazorWebAssemblyEnableLinking>false</BlazorWebAssemblyEnableLinking>
+	  <RunAOTCompilation>true</RunAOTCompilation>
+	  <InvariantGlobalization>true</InvariantGlobalization>
+	  <BlazorEnableTimeZoneSupport>false</BlazorEnableTimeZoneSupport>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.1" PrivateAssets="all" />
+    <PackageReference Include="MudBlazor" Version="6.0.4" />
+		<PackageReference Include="blazor-dom-confetti" Version="0.0.0.5" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\EvilWords\EvilWords.csproj" />
+	</ItemGroup>
+
+</Project>
