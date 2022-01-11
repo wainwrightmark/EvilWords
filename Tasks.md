@@ -1,4 +1,5 @@
-- [ ] Version Control
+- [x] Version Control
+- [x] WASM
 - [ ] Continuous Integration / Deployment
 - [ ] Fluxor
 - [ ] Local Storage
