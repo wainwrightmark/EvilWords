@@ -1,6 +1,7 @@
 - [x] Version Control
 - [x] WASM
 - [ ] Continuous Integration / Deployment
+- [ ] Run as Task
 - [ ] Fluxor
 - [ ] Local Storage
 - [ ] "Nice Words"

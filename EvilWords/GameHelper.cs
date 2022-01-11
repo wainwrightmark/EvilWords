@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Concurrent;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 
@@ -30,10 +31,10 @@ public static class GameHelper
         };
     }
 
-    
-    
 
-    public static int RunGame(string hiddenWord, GameSettings gameSettings, SolveSettings solveSettings, ILogger logger)
+    public static int RunGame(string hiddenWord, GameSettings gameSettings, SolveSettings solveSettings,
+        ConcurrentDictionary<GameState, string>? resultCache,
+        ILogger logger)
     {
         var sw = Stopwatch.StartNew();
         var gs = new GameState(ImmutableArray<GuessResult>.Empty);
@@ -42,13 +43,16 @@ public static class GameHelper
         while (true)
         {
             rounds++;
-            var guess = Solver.GetBestGuess(gs, GameSettings.FiveLetter, solveSettings);
+            var guess = Solver.GetBestGuess(gs, GameSettings.FiveLetter, solveSettings, resultCache);
             var guessResult = GuessResult.ScoreWord(hiddenWord, guess);
             var gro = gs.MakeGuessResultOptimizer();
 
-            var remainingSolutions = gro is null ? gameSettings.PossibleHiddenWords.Count : gameSettings.PossibleHiddenWords.Count(gro.Allow);
+            var remainingSolutions = gro is null
+                ? gameSettings.PossibleHiddenWords.Count
+                : gameSettings.PossibleHiddenWords.Count(gro.Allow);
 
-            logger.LogInformation($"{sw.Elapsed}: Round {rounds} {guessResult.Word()} {guessResult.ColorText()} Remaining Solutions: {remainingSolutions}");
+            logger.LogInformation(
+                $"{sw.Elapsed}: Round {rounds} {guessResult.Word()} {guessResult.ColorText()} Remaining Solutions: {remainingSolutions}");
 
             if (guessResult.IsCorrect)
                 return rounds;

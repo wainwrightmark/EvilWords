@@ -1,5 +1,13 @@
 ﻿namespace EvilWords;
 
+public class GROException : Exception
+{
+    public GROException(string message) : base(message)
+    {
+
+    }
+}
+
 public record GuessResultOptimizer(int ExpectedLength,
     (char c, int index)[] KnownCharacters,
     ILookup<char, int> KnownBadCharacterIndexes,
@@ -62,7 +70,7 @@ public record GuessResultOptimizer(int ExpectedLength,
     public GuessResultOptimizer Combine(GuessResultOptimizer gr2)
     {
         if (ExpectedLength != gr2.ExpectedLength)
-            throw new Exception($"Cannot combine GROs with lengths {ExpectedLength} and {gr2.ExpectedLength}");
+            throw new GROException($"Cannot combine GROs with lengths {ExpectedLength} and {gr2.ExpectedLength}");
 
         var newKnownCharacters = KnownCharacters.Concat(gr2.KnownCharacters)
             .GroupBy(x => x.index, x => x.c)
@@ -71,7 +79,7 @@ public record GuessResultOptimizer(int ExpectedLength,
                 if (x.Distinct().Count() == 1)
                     return (x.First(), x.Key);
 
-                throw new Exception($"Cannot have both {string.Join(" and ", x.Distinct())} at index {x.Key}");
+                throw new GROException($"Cannot have both {string.Join(" and ", x.Distinct())} at index {x.Key}");
             }).ToArray();
 
         ILookup<char, int> newKnownBadCharacterIndexes;
@@ -106,7 +114,7 @@ public record GuessResultOptimizer(int ExpectedLength,
                 if (pair.First.HasValue)
                 {
                     if (pair.Second.HasValue && pair.Second.Value != pair.First.Value)
-                        throw new Exception($"Char has different max multiplicities {pair.First} and {pair.Second}");
+                        throw new GROException($"Char has different max multiplicities {pair.First} and {pair.Second}");
                     return pair.First;
                 }
 
@@ -126,7 +134,7 @@ public record GuessResultOptimizer(int ExpectedLength,
     public bool Allow(string possibleSolution)
     {
         if (possibleSolution.Length != ExpectedLength)
-            throw new Exception(
+            throw new GROException(
                 $"{possibleSolution} was length {possibleSolution.Length} but expected length {ExpectedLength}");
 
         foreach (var (c, index) in KnownCharacters)

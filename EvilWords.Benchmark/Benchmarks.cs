@@ -9,11 +9,9 @@ namespace EvilWords.Benchmark;
 [SimpleJob(RunStrategy.Monitoring, invocationCount: 1, targetCount: 2)]
 public class Benchmarks
 {
-    [Params(true)]
+    [Params(true, false)]
     public bool UseParallel { get; set; }
     
-    [Params(true, false)]
-    public bool UseFastChecking { get; set; }
 
     public int NumberOfGames { get; set; } = 100;
 
@@ -30,20 +28,21 @@ public class Benchmarks
             Seed,
             null,
             UseParallel,
-            SolveSettings.FiveLetterOptimalGuesses,
-            new ConcurrentDictionary<GameState, string>()
+            SolveSettings.FiveLetterOptimalGuesses
         );
 
+        var dict = new ConcurrentDictionary<GameState, string>();
 
         Solver.GetBestGuess(new GameState(ImmutableArray<GuessResult>.Empty),
             gameSettings,
-            solveSettings
+            solveSettings,
+            dict
         );
 
         for (var i = 0; i < NumberOfGames; i++)
         {
             var word = gameSettings.GetRandomHiddenWord(null, random, false);
-            GameHelper.RunGame(word, gameSettings, solveSettings, NullLogger.Instance);
+            GameHelper.RunGame(word, gameSettings, solveSettings, dict, NullLogger.Instance);
         }
     }
 
@@ -51,18 +50,19 @@ public class Benchmarks
     [Benchmark]
     public void TestBestFirstWord()
     {
+        var dict = new ConcurrentDictionary<GameState, string>();
         var solveSettings = new SolveSettings(
             Seed,
             NumberOfGames,
             UseParallel,
-            new Dictionary<string, IReadOnlyList<string>>(),
-            null
-        ){UseFastChecking = UseFastChecking};
+            new Dictionary<string, IReadOnlyList<string>>()
+        ){};
 
 
         Solver.GetBestGuess(new GameState(ImmutableArray<GuessResult>.Empty),
             GameSettings.FiveLetter,
-            solveSettings
+            solveSettings,
+            dict
         );
     }
     

@@ -5,7 +5,7 @@
 
 
 <MudList>
-    @for (var guessResultIndex = 0; guessResultIndex < GameState.PreviousGuesses.Length; guessResultIndex++)
+    @for (var guessResultIndex = 0; guessResultIndex < GameState.PreviousGuesses.Count; guessResultIndex++)
     {
         var guessResult = GameState.PreviousGuesses[guessResultIndex];
 
@@ -137,7 +137,7 @@
         hiddenWord = Settings.GetRandomHiddenWord(gro, Random, true);
         if (!IsGameOver)
         {
-            var guessCount = GameState.IsWin ? GameState.PreviousGuesses.Length : null as int?;
+            var guessCount = GameState.IsWin ? GameState.PreviousGuesses.Count : null as int?;
             var gameResult = new GameResult(guessCount, hiddenWord);
             History = History.Add(gameResult);
         }
@@ -177,13 +177,13 @@
         if (GameState.IsWin)
         {
             IsGameOver = true;
-            var gameResult = new GameResult(GameState.PreviousGuesses.Length, guess);
+            var gameResult = new GameResult(GameState.PreviousGuesses.Count, guess);
             History = History.Add(gameResult);
             blafettis.RaiseConfetti();  // raise confetti via method
 
         }
 
-        if (GameState.PreviousGuesses.Length >= Settings.MaxRounds)
+        if (GameState.PreviousGuesses.Count >= Settings.MaxRounds)
         {
             var gro = GameState.MakeGuessResultOptimizer();
             var hiddenWord = Settings.GetRandomHiddenWord(gro, Random, true);

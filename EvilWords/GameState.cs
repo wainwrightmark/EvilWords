@@ -4,11 +4,51 @@ using Generator.Equals;
 
 namespace EvilWords;
 
+
+public static class GameStateSerialization
+{
+    public static string Serialize(this GameState gs)
+    {
+        if (gs.IsFirstRound) return "";
+
+        var r = string.Join("_",
+            gs.PreviousGuesses.Select(x => x.Word() + "-" + x.ColorText())
+        );
+
+        return r;
+    }
+
+    public static GameState Deserialize(string s)
+    {
+        s = s.Trim('\'');
+        if(string.IsNullOrWhiteSpace(s))
+            return GameState.Empty;
+
+        var grs = s.Split('_', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(DeserializeGr).ToImmutableList();
+        return new GameState(grs);
+
+        static GuessResult DeserializeGr(string s)
+        {
+            var i = s.IndexOf('-');
+            var word = s.Substring(0, i);
+            var color = s.Substring(i + 1);
+
+            var colors = word.Zip(color).Select(x => CharResult.Create(x.First, x.Second)).ToImmutableList();
+
+            return new GuessResult(colors);
+        }
+    }
+}
+
 [Equatable]
-public partial record GameState([property: OrderedEquality] ImmutableArray<GuessResult> PreviousGuesses)
+public partial record GameState([property: OrderedEquality] IReadOnlyList<GuessResult> PreviousGuesses)
 {
 
     public static GameState Empty { get; } = new (ImmutableArray<GuessResult>.Empty);
+
+
+
+
 
     /// <inheritdoc />
     public override string ToString()
@@ -21,9 +61,10 @@ public partial record GameState([property: OrderedEquality] ImmutableArray<Guess
     public bool IsFirstRound => !PreviousGuesses.Any();
 
     public bool IsWin => PreviousGuesses.Any(x => x.IsCorrect);
+    
 
     [Pure]
-    public GameState Add(GuessResult guessResult) => new (PreviousGuesses.Add(guessResult));
+    public GameState Add(GuessResult guessResult) => new (PreviousGuesses.ToImmutableList().Add(guessResult).ToList());
 
     public GuessResultOptimizer? MakeGuessResultOptimizer()
     {

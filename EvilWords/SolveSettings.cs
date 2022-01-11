@@ -1,6 +1,4 @@
-﻿using System.Collections.Concurrent;
-
-namespace EvilWords;
+﻿namespace EvilWords;
 
 public record SolveSettings
 {
@@ -138,21 +136,17 @@ public record SolveSettings
         int? randomSeed,
         int? maxSolutionsToSearch,
         bool useParallel,
-        IReadOnlyDictionary<string, IReadOnlyList<string>> optimalGuessDictionary,
-        ConcurrentDictionary<GameState, string>? resultCache
+        IReadOnlyDictionary<string, IReadOnlyList<string>> optimalGuessDictionary
     )
     {
         RandomSeed = randomSeed;
         MaxSolutionsToSearch = maxSolutionsToSearch;
         UseParallel = useParallel;
         OptimalGuessDictionary = optimalGuessDictionary;
-        ResultCache = resultCache;
     }
 
     public int? RandomSeed { get; init; } 
     public int? MaxSolutionsToSearch { get; init; }
     public bool UseParallel { get; init; } = true;
-    public bool UseFastChecking { get; init; } = true;
     public IReadOnlyDictionary<string, IReadOnlyList<string>> OptimalGuessDictionary { get; init; }
-    public ConcurrentDictionary<GameState, string>? ResultCache { get; init; }
 }

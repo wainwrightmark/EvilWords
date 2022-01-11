@@ -1,16 +1,21 @@
 ﻿@using MudBlazor
 @using System.Collections.Concurrent
 @using System.Collections.Immutable
-
+@using System.Text.Json
+@using BlazorWorker.BackgroundServiceFactory
+@using BlazorWorker.Core
+@using BlazorWorker.WorkerBackgroundService
+@implements IDisposable;
+@inject IWorkerFactory _workerFactory
 
 <MudList>
-    @for (var guessResultIndex = 0; guessResultIndex < GameState.PreviousGuesses.Length; guessResultIndex++)
+    @for (var guessResultIndex = 0; guessResultIndex < GameState.PreviousGuesses.Count; guessResultIndex++)
     {
         var guessResult = GameState.PreviousGuesses[guessResultIndex];
         var gri = guessResultIndex;
 
         <MudListItem>
-            
+
             @for (var charResultIndex = 0; charResultIndex < guessResult.Results.Count; charResultIndex++)
             {
                 var cri = charResultIndex;
@@ -27,10 +32,10 @@
 
         </MudListItem>
     }
-    
+
 
     <MudListItem>
-        
+
         <MudButtonGroup>
             <MudTextField
                 @bind-Value="UserGuess"
@@ -41,17 +46,14 @@
                 InputType="InputType.Text"
                 Immediate="true"
                 Pattern="@Settings.Pattern"
-                Style="width:fit-content"
-            
-                />
+                Style="width: fit-content"/>
             <MudIconButton
                 Icon="@Icons.Filled.Add"
                 OnClick="AddGuess"
-                Disabled="!IsGoodGuess()"
-            />
+                Disabled="!IsGoodGuess()"/>
         </MudButtonGroup>
 
-        
+
     </MudListItem>
 
 
@@ -63,6 +65,8 @@
 
     public GameSettings Settings { get; } = GameSettings.FiveLetter;
 
+    private (IWorker Worker, IWorkerBackgroundService<SolverService> Service)? Worker { get; set; }
+
     private string _userGuess = "";
 
     public string UserGuess
@@ -72,10 +76,24 @@
     }
 
     /// <inheritdoc />
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
-        StateChanged();
+        await base.OnInitializedAsync();
+
+        if (Worker is null)
+        {
+            var worker = await _workerFactory.CreateAsync();
+            var service = await worker.CreateBackgroundServiceAsync<SolverService>(
+                x => x
+                    .AddConventionalAssemblyOfService()
+                    .AddAssemblyOf<Generator.Equals.EquatableAttribute>()
+                    .AddAssemblies("Microsoft.Bcl.HashCode.dll", "System.Linq.Parallel.dll", "System.Diagnostics.Tracing.dll")
+                );
+
+            Worker = (worker, service);
+
+            StateChanged();
+        }
     }
 
     public void RemoveGuesses(int index)
@@ -84,20 +102,12 @@
         StateChanged();
     }
 
-    private readonly ConcurrentDictionary<GameState, string> _resultCache =
-        new(
-            new Dictionary<GameState, string>()
-            {
-                { new GameState(ImmutableArray<GuessResult>.Empty), "SOARE" }
-            }
-            );
-
     public int StochasticSize { get; set; } = 20;
 
     public Random Random = new();
 
 
-    private readonly record struct SuggestionData(string BestWord, IReadOnlyList<string> RemainingPossibilities )
+    private readonly record struct SuggestionData(string BestWord, IReadOnlyList<string> RemainingPossibilities)
     {
         public string PossibilityText
         {
@@ -126,7 +136,7 @@
 
         guess = new string(guess.Trim().ToUpperInvariant().Where(char.IsLetter).ToArray());
 
-        if(guess.Length != Settings.WordLength || !Settings.PossibleGuesses.Contains(guess))
+        if (guess.Length != Settings.WordLength || !Settings.PossibleGuesses.Contains(guess))
             return null;
 
         return guess;
@@ -157,7 +167,7 @@
         newResults[charIndex] = newChr;
 
         var newGuess = guess with{Results = newResults};
-        var newGameState = GameState with{PreviousGuesses = GameState.PreviousGuesses.SetItem(resultIndex, newGuess)};
+        var newGameState = GameState with{PreviousGuesses = GameState.PreviousGuesses.ToImmutableList().SetItem(resultIndex, newGuess)};
 
         GameState = newGameState;
 
@@ -174,7 +184,7 @@
         newResults[charIndex] = newChr;
 
         var newGuess = guess with{Results = newResults};
-        var newGameState = GameState with{PreviousGuesses = GameState.PreviousGuesses.SetItem(resultIndex, newGuess)};
+        var newGameState = GameState with{PreviousGuesses = GameState.PreviousGuesses.ToImmutableList().SetItem(resultIndex, newGuess)};
 
         GameState = newGameState;
 
@@ -183,42 +193,67 @@
 
     private CancellationTokenSource? _cancellationTokenSource;
 
-    private void StateChanged()
+    private async Task StateChanged()
     {
         _cancellationTokenSource?.Cancel();
         _cancellationTokenSource = new CancellationTokenSource();
         Suggestion = null;
         StateHasChanged();
 
-        try
-        {
-            var bestGuess = Solver.GetBestGuess(GameState,
-                Settings,
-                new SolveSettings(null, StochasticSize,
-                    true,
-                    SolveSettings.FiveLetterOptimalGuesses,
-                    _resultCache
-                    ));
-
-            if(_cancellationTokenSource.IsCancellationRequested)
-                return;
-
-            var gro = GameState.MakeGuessResultOptimizer();
-            var possibilities = Settings.FilterHiddenWords(gro);
-
-            if (possibilities.Count <= 0)
-                bestGuess = "";
-
-            if(_cancellationTokenSource.IsCancellationRequested)
-                return;
-            Suggestion = new SuggestionData(bestGuess, possibilities);
-        }
-        catch
-        {
+        if (!Worker.HasValue)
             return;
+
+        var serializedGameState = GameState.Serialize();
+
+        var gro = GameState.MakeGuessResultOptimizer();
+        var possibilities = Settings.FilterHiddenWords(gro);
+        string? bestGuess;
+
+        if (possibilities.Count <= 0)
+            bestGuess = null;
+        else
+        {
+            if (_cancellationTokenSource.IsCancellationRequested)
+                return;
+
+            try
+            {
+                bestGuess = await Worker.Value.Service.RunAsync(x =>
+                    x.GetBestGuess(serializedGameState)
+                    );
+            }
+            catch (Exception e)
+            {
+                var message = GetInnerMostMessage(e);
+
+                Console.WriteLine(message);
+                return;
+            }
         }
+
+        if (_cancellationTokenSource.IsCancellationRequested)
+            return;
+        Suggestion = new SuggestionData(bestGuess??"", possibilities);
+
 
         StateHasChanged();
+
+        static string GetInnerMostMessage(Exception e)
+        {
+            if (e.InnerException is not null) return GetInnerMostMessage(e.InnerException);
+            return e.Message;
+        }
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        _cancellationTokenSource?.Cancel();
+        if (Worker is not null)
+        {
+            Worker.Value.Service.DisposeAsync();
+            Worker.Value.Worker.DisposeAsync();
+        }
     }
 
 }

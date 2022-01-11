@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.Linq;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Xunit;
-using Newtonsoft.Json;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -67,56 +66,57 @@ public class UnitTest1
     
     
     [Theory]
-    [InlineData("SOARE",  1, 1000, 123, true)]
-    [InlineData("SOLVE",  2, 1000, 123, true)]
-    [InlineData("ANGER", 4, 100, 123, true)]
-    [InlineData("ANGER", 4, 100, 456, true)]
-    [InlineData("ANGER", 4, null, 123, true)]
-    [InlineData("ANGER", 4, null, 123, false)]
-    [InlineData("ANGER", 4, null, 456, true)]
-    [InlineData("ANGER", 4, null, 456, false)]
+    [InlineData("SOARE",  1, 1000, 123)]
+    [InlineData("SOLVE",  2, 1000, 123)]
+    [InlineData("ANGER", 4, 100, 123)]
+    [InlineData("ANGER", 4, 100, 456)]
+    [InlineData("ANGER", 4, null, 123)]
+    [InlineData("ANGER", 4, null, 123)]
+    [InlineData("ANGER", 4, null, 456)]
+    [InlineData("ANGER", 4, null, 456)]
     
-    public void TestGame(string hiddenWord,  int expectedRounds, int? maxSolutionsToTry, int seed, bool useFastChecking)
+    public void TestGame(string hiddenWord,  int expectedRounds, int? maxSolutionsToTry, int seed)
     {
         var settings = GameSettings.FiveLetter;
         var logger = new XunitLogger(TestOutputHelper, "TestGame");
         var solveSettings = new SolveSettings(
             seed, maxSolutionsToTry,
             true,
-            SolveSettings.FiveLetterOptimalGuesses,
-            new ConcurrentDictionary<GameState, string>()
-        ){UseFastChecking = useFastChecking};
+            SolveSettings.FiveLetterOptimalGuesses
+        ){};
         
-        var totalRounds = GameHelper.RunGame(hiddenWord.ToUpperInvariant(), settings, solveSettings, logger);
+        var totalRounds = GameHelper.RunGame(hiddenWord.ToUpperInvariant(), settings, solveSettings, null, logger);
         
         totalRounds.Should().Be(expectedRounds);
     }
 
     [Theory]
-    [InlineData(100, 10, 123, false)]
-    [InlineData(100, 10, 456, false)]
-    [InlineData(100, 10, 123, true)]
-    [InlineData(100, 10, 456, true)]
-    public void TestManyGames(int gamesToPlay, int? stochasticSolutions, int seed, bool useFastChecking)
+    [InlineData(100, 10, 123)]
+    [InlineData(100, 10, 456)]
+    [InlineData(100, 10, 123)]
+    [InlineData(100, 10, 456)]
+    public void TestManyGames(int gamesToPlay, int? stochasticSolutions, int seed)
     {
         var random = new Random(seed);
         var settings = GameSettings.FiveLetter;
         var totalRounds = 0;
         var maxRounds = 0;
 
+        var cache = new ConcurrentDictionary<GameState, string>();
+
         var solveSettings = new SolveSettings(
             seed,
             stochasticSolutions,
             true,
-            SolveSettings.FiveLetterOptimalGuesses,
-            new ConcurrentDictionary<GameState, string>()
-        ){UseFastChecking = useFastChecking};
+            SolveSettings.FiveLetterOptimalGuesses
+            
+        );
 
         for (var i = 0; i < gamesToPlay; i++)
         {
             var word = settings.GetRandomHiddenWord(null, random, false);
             var logger = new XunitLogger(TestOutputHelper,$"Game {i}: " + word);
-            var rounds = GameHelper.RunGame(word, settings, solveSettings, logger);
+            var rounds = GameHelper.RunGame(word, settings, solveSettings, cache, logger);
             totalRounds += rounds;
             maxRounds = Math.Max(maxRounds, rounds);
         }
@@ -210,11 +210,10 @@ public class UnitTest1
 
         var solveSettings = new SolveSettings(seed, possiblesToTake,
             true,
-            new Dictionary<string, IReadOnlyList<string>>(),
-            null
-        ){UseFastChecking = true};
+            new Dictionary<string, IReadOnlyList<string>>()
+        );
 
-        var bestGuess = Solver.GetBestGuess(state, GameSettings.FiveLetter, solveSettings);
+        var bestGuess = Solver.GetBestGuess(state, GameSettings.FiveLetter,  solveSettings,null);
         sw.Stop();
         
         TestOutputHelper.WriteLine(sw.Elapsed.ToString());
@@ -259,8 +258,7 @@ public class UnitTest1
             null, 
             null, 
             true,
-            new Dictionary<string, IReadOnlyList<string>>(),
-            null);
+            new Dictionary<string, IReadOnlyList<string>>());
 
         TestOutputHelper.WriteLine($"{guessResults.Count} possibleResults");
 
@@ -269,7 +267,7 @@ public class UnitTest1
         foreach (var guessResult in guessResults)
         {
             var gameState = new GameState(ImmutableArray<GuessResult>.Empty.Add(guessResult));
-            var bestGuess = Solver.GetBestGuess(gameState, GameSettings.FiveLetter, solveSettings);
+            var bestGuess = Solver.GetBestGuess(gameState, GameSettings.FiveLetter, solveSettings, null);
 
             if (stage2WordsSoFar.Add(bestGuess))
             {
@@ -293,53 +291,14 @@ public class UnitTest1
 
         var bestGuess = Solver.GetBestGuess(state,
             GameSettings.FiveLetter,
-            new SolveSettings(null, null,true, new Dictionary<string, IReadOnlyList<string>>(), null)
+            new SolveSettings(null, null,true, new Dictionary<string, IReadOnlyList<string>>()),
+            null
         );
         sw.Stop();
         
         TestOutputHelper.WriteLine(sw.Elapsed.ToString());
         TestOutputHelper.WriteLine(bestGuess);
     }
-
-
-    [Theory]
-    [InlineData(123,100)]
-    public void TestFastChecking(int seed, int rounds)
-    {
-        var settings = GameSettings.FiveLetter;
-        for (var i = 0; i < rounds; i++)
-        {
-            var random = new Random(seed + i);
-            var solutionsToSearch = random.Next(20);
-            var newSeed = random.Next();
-            var settingsSlow = new SolveSettings(newSeed, solutionsToSearch, false,
-                new Dictionary<string, IReadOnlyList<string>>(), null)
-            {
-                UseFastChecking = false
-            };
-            
-            
-            var settingsFast = new SolveSettings(newSeed, solutionsToSearch, false,
-                new Dictionary<string, IReadOnlyList<string>>(), null)
-            {
-                UseFastChecking = true
-            };
-
-            var hiddenWord = settings.GetRandomHiddenWord(null, random, false);
-            var guess1 = settings.GetRandomHiddenWord(null, random, false);
-            var guess2 = settings.GetRandomHiddenWord(null, random, false);
-
-            var guessResult1 = GuessResult.ScoreWord(hiddenWord, guess1);
-
-            var gs = new GameState(ImmutableArray<GuessResult>.Empty.Add(guessResult1));
-
-            var slowResult = Solver.GetBestGuess(gs, GameSettings.FiveLetter, settingsSlow);
-            var fastResult = Solver.GetBestGuess(gs, GameSettings.FiveLetter, settingsFast);
-
-            slowResult.Should().Be(fastResult,
-                $"Guessing {guess2} for {hiddenWord} after {guessResult1.ColorText()} should produce {slowResult} (seed {seed + i}");
-
-        }
-    }
+    
     
 }

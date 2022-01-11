@@ -2,6 +2,7 @@
 
 namespace EvilWords;
 
+
 [Equatable]
 public partial record GuessResult([property: OrderedEquality] IReadOnlyList<CharResult> Results)
 {
