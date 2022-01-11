@@ -1,0 +1,11 @@
+- [ ] Version Control
+- [ ] Continuous Integration / Deployment
+- [ ] Fluxor
+- [ ] Local Storage
+- [ ] "Nice Words"
+- [ ] Other Game Sizes
+- [ ] Way of showing available letters
+- [ ] Letter coloring in input box
+- [ ] Confetti
+- [x] Hidden word is first guess next time
+- [xor] Hidden word is an insult :)

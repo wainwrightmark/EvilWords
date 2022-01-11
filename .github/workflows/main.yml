@@ -1,0 +1,42 @@
+name: Deploy to GitHub Pages
+# Run workflow on every push to the main branch
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy-to-github-pages:
+    # use ubuntu-latest image to run steps on
+    runs-on: ubuntu-latest
+    steps:  
+    # uses GitHub's checkout action to checkout code form the main branch
+    - uses: actions/checkout@v2
+    # sets up .NET Core SDK
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v1.7.2
+      with:
+        dotnet-version: 6.0.x
+    # Install WASM Tools
+    - name: Install WASM Tools
+      run: dotnet workload install wasm-tools
+    # publishes Blazor project to the release-folder
+    - name: Publish .NET Core Project
+      run: dotnet publish EvilWords.Blazor/EvilWords.Blazor.csproj -c Release -o release --nologo
+      # changes the base-tag in index.html from '/' to 'Myriad' to match GitHub Pages repository subdirectory
+    - name: Change base-tag in index.html from / to EvilWords
+      run: sed -i 's/<base href="\/"\/>/<base href="\/EvilWords\/" \/>/g' release/wwwroot/index.html
+      
+    # add .nojekyll file to tell GitHub pages to not treat this as a Jekyll project. (Allow files and folders starting with an underscore)
+    - name: Add .nojekyll file
+      run: touch release/wwwroot/.nojekyll
+    # add .htaccess file
+    - name: Add .htaccess file
+      run: touch release/wwwroot/.htaccess
+           echo 'DirectoryIndex index.html' > release/wwwroot/.htaccess
+
+    - name: Commit wwwroot to GitHub Pages
+      uses: JamesIves/github-pages-deploy-action@3.7.1
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        BRANCH: gh-pages
+        FOLDER: release/wwwroot     
