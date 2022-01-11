@@ -1,4 +1,7 @@
 ﻿@using System.Collections.Immutable
+@using BlafettisLib
+
+
 
 <MudList>
     @for (var guessResultIndex = 0; guessResultIndex < GameState.PreviousGuesses.Length; guessResultIndex++)
@@ -87,13 +90,13 @@
     
 
 </MudList>
-
+<Blafettis @ref="blafettis" duration="8000" elementCount="150" />
 
 @code{
 
     public RunHistory History { get; set; } =RunHistory.Empty;
 
-    public GameState GameState { get; set; } = new(ImmutableArray<GuessResult>.Empty);
+    public GameState GameState { get; set; } = GameState.Empty;
 
     public GameSettings Settings { get; } = GameSettings.FiveLetter;
 
@@ -109,15 +112,20 @@
     
     
     public Random Random = new();
+    protected Blafettis blafettis;
+
 
     /// <inheritdoc />
-    protected override void OnInitialized()
+    protected override void OnParametersSet()
     {
-        base.OnInitialized();
-        GameState = GameState.Empty;
-        UserGuess = Settings.GetRandomHiddenWord(null, Random, true);
-        AddGuess();
-        IsGameOver = false;
+        base.OnParametersSet();
+        if (string.IsNullOrWhiteSpace(UserGuess))
+        {
+            GameState = GameState.Empty;
+            UserGuess = Settings.GetRandomHiddenWord(null, Random, true);
+            AddGuess();
+            IsGameOver = false;
+        }
         
     }
 
@@ -170,6 +178,8 @@
             IsGameOver = true;
             var gameResult = new GameResult(GameState.PreviousGuesses.Length, guess);
             History = History.Add(gameResult);
+            blafettis.RaiseConfetti();  // raise confetti via method
+
         }
 
         if (GameState.PreviousGuesses.Length >= Settings.MaxRounds)
