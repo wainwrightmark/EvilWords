@@ -148,5 +148,8 @@ public record SolveSettings
     public int? RandomSeed { get; init; } 
     public int? MaxSolutionsToSearch { get; init; }
     public bool UseParallel { get; init; } = true;
+
+    public bool EliminateUselessGuesses { get; set; } = true;
+
     public IReadOnlyDictionary<string, IReadOnlyList<string>> OptimalGuessDictionary { get; init; }
 }

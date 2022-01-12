@@ -16,14 +16,14 @@ public class SolverService
     /// </summary>
     public string? GetBestGuess(
         string serializedGameState
-        )
+    )
     {
         _cts?.Cancel();
 
         _cts = new CancellationTokenSource();
 
         var gameState = GameStateSerialization.Deserialize(serializedGameState);
-        var solveSettings = 
+        var solveSettings =
                 new SolveSettings()
                 {
                     MaxSolutionsToSearch = 10,
@@ -31,7 +31,7 @@ public class SolverService
                     RandomSeed = null,
                     UseParallel = true
                 }
-                ;
+            ;
 
         return Solver.GetBestGuess(gameState,
             GameSettings.FiveLetter,
@@ -87,13 +87,14 @@ public static class Solver
         GameState state,
         GameSettings gameSettings,
         SolveSettings solveSettings,
-        ConcurrentDictionary<GameState, string?>? resultCache ,
+        ConcurrentDictionary<GameState, string?>? resultCache,
         CancellationToken? cancellationToken = null)
     {
         var ct = cancellationToken ?? CancellationToken.None;
-        Func<GameState, string?> func = solveSettings.UseParallel ?
-            s=>
-            GetBestGuessParallel(s, gameSettings, solveSettings, ct) : s=>
+        Func<GameState, string?> func = solveSettings.UseParallel
+            ? s =>
+                GetBestGuessParallel(s, gameSettings, solveSettings, ct)
+            : s =>
                 GetBestGuessSingleThread(s, gameSettings, solveSettings, ct);
 
         if (resultCache is not null)
@@ -101,8 +102,6 @@ public static class Solver
 
         var finalResult = func.Invoke(state);
         return finalResult;
-
-        
     }
 
     private static string? GetBestGuessParallel(GameState state,
@@ -111,117 +110,124 @@ public static class Solver
         CancellationToken cancellationToken)
     {
         GuessResultOptimizer? gro;
-            try
-            {
-                gro = state.MakeGuessResultOptimizer();
-            }
-            catch (GROException)
-            {
-                return null;
-            }
-            
-
-            IReadOnlyCollection<string> remainingHiddenWords =
-                gro is null
-                    ? gameSettings.PossibleHiddenWords
-                    : gameSettings.PossibleHiddenWords.Where(gro.Allow).ToHashSet();
-
-            if (solveSettings.MaxSolutionsToSearch.HasValue &&
-                remainingHiddenWords.Count > solveSettings.MaxSolutionsToSearch)
-            {
-                var random = solveSettings.RandomSeed.HasValue
-                    ? new Random(solveSettings.RandomSeed.Value)
-                    : Random.Shared;
-                remainingHiddenWords = remainingHiddenWords
-                    .OrderBy(_ => random.Next())
-                    .Take(solveSettings.MaxSolutionsToSearch.Value).ToHashSet();
-            }
-
-            var previousGuessKey = string.Join(";", state.PreviousGuesses.Select(x => x.Word()));
-
-            var possibleGuesses = solveSettings.OptimalGuessDictionary
-                .GetValueOrDefault(previousGuessKey, gameSettings.PossibleGuesses);
-
-
-            var leastTotal = int.MaxValue;
-
-            var bestGuess = possibleGuesses
-                .AsParallel()
-                .WithCancellation(cancellationToken)
-                .Select(guessWord =>
-                {
-                    var possibilitiesRemaining =
-                        CountSolutionsRemainingAfterGuess(gro, guessWord, remainingHiddenWords, leastTotal);
-
-                    if (possibilitiesRemaining < leastTotal)
-                        leastTotal = possibilitiesRemaining.Value;
-
-                    return (guessWord, possibilitiesRemaining);
-                })
-                .Where(x => x.possibilitiesRemaining.HasValue)
-                .OrderBy(x => x.possibilitiesRemaining)
-                .ThenByDescending(x => remainingHiddenWords.Contains(x.guessWord))
-                .Select(x => x.guessWord)
-                .FirstOrDefault("");
-
-            return bestGuess;
-
+        try
+        {
+            gro = state.MakeGuessResultOptimizer();
         }
-    
-    
+        catch (GROException)
+        {
+            return null;
+        }
+
+
+        IReadOnlySet<string> remainingHiddenWords = gameSettings.FilterHiddenWords(gro).ToHashSet();
+
+        if (solveSettings.MaxSolutionsToSearch.HasValue &&
+            remainingHiddenWords.Count > solveSettings.MaxSolutionsToSearch)
+        {
+            var random = solveSettings.RandomSeed.HasValue
+                ? new Random(solveSettings.RandomSeed.Value)
+                : Random.Shared;
+            remainingHiddenWords = remainingHiddenWords
+                .OrderBy(_ => random.Next())
+                .Take(solveSettings.MaxSolutionsToSearch.Value).ToHashSet();
+        }
+
+        var previousGuessKey = string.Join(";", state.PreviousGuesses.Select(x => x.Word()));
+
+        var possibleGuesses = solveSettings.OptimalGuessDictionary
+            .GetValueOrDefault(previousGuessKey, gameSettings.PossibleGuesses);
+
+        if (solveSettings.EliminateUselessGuesses) possibleGuesses = FilterGuesses(possibleGuesses, gro);
+
+        var leastTotal = int.MaxValue;
+
+        var bestGuess = possibleGuesses
+            .AsParallel()
+            .WithCancellation(cancellationToken)
+            .Select(guessWord =>
+            {
+                var possibilitiesRemaining =
+                    CountSolutionsRemainingAfterGuess(gro, guessWord, remainingHiddenWords, leastTotal);
+
+                if (possibilitiesRemaining < leastTotal)
+                    leastTotal = possibilitiesRemaining.Value;
+
+                return (guessWord, possibilitiesRemaining);
+            })
+            .Where(x => x.possibilitiesRemaining.HasValue)
+            .OrderBy(x => x.possibilitiesRemaining)
+            .ThenByDescending(x => remainingHiddenWords.Contains(x.guessWord))
+            .Select(x => x.guessWord)
+            .FirstOrDefault("");
+
+        return bestGuess;
+    }
+
+
     private static string? GetBestGuessSingleThread(GameState state,
         GameSettings gameSettings,
         SolveSettings solveSettings,
         CancellationToken cancellationToken)
+    {
+        GuessResultOptimizer? gro;
+        try
         {
-            GuessResultOptimizer? gro;
-            try
-            {
-                gro = state.MakeGuessResultOptimizer();
-            }
-            catch (GROException)
-            {
-                return null;
-            }
-            
-
-            IReadOnlyCollection<string> remainingHiddenWords = gameSettings.FilterHiddenWords(gro).ToHashSet();
-
-            if (solveSettings.MaxSolutionsToSearch.HasValue &&
-                remainingHiddenWords.Count > solveSettings.MaxSolutionsToSearch)
-            {
-                var random = solveSettings.RandomSeed.HasValue
-                    ? new Random(solveSettings.RandomSeed.Value)
-                    : Random.Shared;
-                remainingHiddenWords = remainingHiddenWords
-                    .OrderBy(_ => random.Next())
-                    .Take(solveSettings.MaxSolutionsToSearch.Value).ToHashSet();
-            }
-
-            var previousGuessKey = string.Join(";", state.PreviousGuesses.Select(x => x.Word()));
-
-            var possibleGuesses = solveSettings.OptimalGuessDictionary
-                .GetValueOrDefault(previousGuessKey, gameSettings.PossibleGuesses);
-
-            var leastTotal = int.MaxValue;
-            var bestGuess = possibleGuesses
-                .Select(guessWord =>
-                {
-                    var possibilitiesRemaining =
-                        CountSolutionsRemainingAfterGuess(gro, guessWord, remainingHiddenWords, leastTotal);
-
-                    if (possibilitiesRemaining < leastTotal)
-                        leastTotal = possibilitiesRemaining.Value;
-
-                    return (guessWord, possibilitiesRemaining);
-                }).Where(x => x.possibilitiesRemaining.HasValue)
-                .TakeWhile(_=>!cancellationToken.IsCancellationRequested)
-                .OrderBy(x => x.possibilitiesRemaining)
-                .ThenByDescending(x => remainingHiddenWords.Contains(x.guessWord))
-                .Select(x => x.guessWord)
-                .FirstOrDefault("");
-
-            return bestGuess;
-
+            gro = state.MakeGuessResultOptimizer();
         }
+        catch (GROException)
+        {
+            return null;
+        }
+
+
+        IReadOnlySet<string> remainingHiddenWords = gameSettings.FilterHiddenWords(gro).ToHashSet();
+
+        if (solveSettings.MaxSolutionsToSearch.HasValue &&
+            remainingHiddenWords.Count > solveSettings.MaxSolutionsToSearch)
+        {
+            var random = solveSettings.RandomSeed.HasValue
+                ? new Random(solveSettings.RandomSeed.Value)
+                : Random.Shared;
+            remainingHiddenWords = remainingHiddenWords
+                .OrderBy(_ => random.Next())
+                .Take(solveSettings.MaxSolutionsToSearch.Value).ToHashSet();
+        }
+
+        var previousGuessKey = string.Join(";", state.PreviousGuesses.Select(x => x.Word()));
+
+        var possibleGuesses = solveSettings.OptimalGuessDictionary
+            .GetValueOrDefault(previousGuessKey, gameSettings.PossibleGuesses);
+
+        if (solveSettings.EliminateUselessGuesses) possibleGuesses = FilterGuesses(possibleGuesses, gro);
+
+        var leastTotal = int.MaxValue;
+        var bestGuess = possibleGuesses
+            .Select(guessWord =>
+            {
+                var possibilitiesRemaining =
+                    CountSolutionsRemainingAfterGuess(gro, guessWord, remainingHiddenWords, leastTotal);
+
+                if (possibilitiesRemaining < leastTotal)
+                    leastTotal = possibilitiesRemaining.Value;
+
+                return (guessWord, possibilitiesRemaining);
+            }).Where(x => x.possibilitiesRemaining.HasValue)
+            .TakeWhile(_ => !cancellationToken.IsCancellationRequested)
+            .OrderBy(x => x.possibilitiesRemaining)
+            .ThenByDescending(x => remainingHiddenWords.Contains(x.guessWord))
+            .Select(x => x.guessWord)
+            .FirstOrDefault("");
+
+        return bestGuess;
+    }
+
+    private static IReadOnlyList<string> FilterGuesses(IReadOnlyList<string> guesses, GuessResultOptimizer? gro)
+    {
+        if (gro is null) return guesses;
+
+        var newGuesses = guesses.Where(gro.IsUseful).ToList();
+
+        return newGuesses;
+    }
 }

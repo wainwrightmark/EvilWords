@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
 	  <BlazorWebAssemblyEnableLinking>false</BlazorWebAssemblyEnableLinking>
-	  <RunAOTCompilation>true</RunAOTCompilation>
+	  <RunAOTCompilation>false</RunAOTCompilation>
 	  <InvariantGlobalization>true</InvariantGlobalization>
 	  <BlazorEnableTimeZoneSupport>false</BlazorEnableTimeZoneSupport>
   </PropertyGroup>

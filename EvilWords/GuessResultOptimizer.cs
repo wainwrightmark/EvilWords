@@ -129,6 +129,38 @@ public record GuessResultOptimizer(int ExpectedLength,
     }
 
     /// <summary>
+    /// Returns whether a guess is useful
+    /// A guess is useless if:
+    /// There is at least one impossible letter
+    /// All but one letters is either impossible or already in its fixed position
+    /// </summary>
+    public bool IsUseful(string guess)
+    {
+        if (guess.Length != ExpectedLength) return false;
+
+        var nonGreenCharacters = 0;
+        var redCharacters = 0;
+
+        foreach (var grouping in guess.Select((c, i) => (c, i))
+                     .Except(KnownCharacters) //Exclude green characters
+                     .GroupBy(x => x.c, x => x.Item2))
+        {
+            var size = grouping.Count();
+            nonGreenCharacters += size;
+            var max = MaxMultiplicities[grouping.Key - 'A'];
+            if (max < size)
+            {
+                redCharacters += (size - max.Value);
+            }
+        }
+
+        if (redCharacters > 0 && redCharacters + 1 >= nonGreenCharacters)
+            return false; //We already know that every character but one will be either red or green for the correct solution
+
+        return true;
+    }
+
+    /// <summary>
     /// Check if this GuessResult eliminates a possible solution
     /// </summary>
     public bool Allow(string possibleSolution)
