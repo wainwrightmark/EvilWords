@@ -102,9 +102,12 @@
 
     private RunHistory _history = RunHistory.Empty;
     private GameState _gameState = GameState.Empty;
+    private string _hiddenWord = "";
 
-    private const string RunHistoryKey = "Evil5RunHistory";
-    private const string GameStateKey = "Evil5GameState";
+    private const string RunHistoryKey = "Nice5RunHistory";
+    private const string GameStateKey = "Nice5GameState";
+
+    private const string HiddenWordKey = "Nice5HiddenWord";
 
     private async Task SetHistory(RunHistory runHistory)
     {
@@ -112,22 +115,32 @@
         _history = runHistory;
     }
     
-    private async Task SetGameState(GameState gameState)
+    private async Task SetGameState(GameState gameState, string hw)
     {
         await _localStorage.SetItemAsStringAsync(GameStateKey, gameState.Serialize());
         _gameState = gameState;
+
+        await _localStorage.SetItemAsStringAsync(HiddenWordKey, hw);
+        _hiddenWord = hw;
+
     }
 
     private async Task GetGameStateFromLocalStorage()
     {
         var serialized = await _localStorage.GetItemAsStringAsync(GameStateKey);
 
-        if(serialized is not null)
+        if (serialized is not null)
+        {
             _gameState = GameStateSerialization.Deserialize(serialized);
+            var hw = await _localStorage.GetItemAsStringAsync(HiddenWordKey);
+            _hiddenWord = hw;
+        }
+            
         else //Set initial game state
         {
             _gameState = GameState.Empty;
-            UserGuess = Settings.GetRandomHiddenWord(null, Random, true);
+            _hiddenWord = Settings.GetRandomHiddenWord(_gameState.MakeGuessResultOptimizer(), Random, false);
+            UserGuess= Settings.GetRandomHiddenWord(_gameState.MakeGuessResultOptimizer(), Random, false);
             await AddGuess();
         }
     }
@@ -175,17 +188,16 @@
 
     public async Task Restart()
     {
-        var gro = GameState.MakeGuessResultOptimizer();
-        var hiddenWord = Settings.GetRandomHiddenWord(gro, Random, true);
         if (!IsGameOver)
         {
             var guessCount = GameState.IsWin ? GameState.PreviousGuesses.Count : null as int?;
-            var gameResult = new GameResult(guessCount, hiddenWord);
+            var gameResult = new GameResult(guessCount, _hiddenWord);
             await SetHistory(History.Add(gameResult));
         }
 
-        UserGuess = hiddenWord;
-        await SetGameState(GameState.Empty);
+        var newHiddenWord = Settings.GetRandomHiddenWord(null, Random, false);
+        await SetGameState(GameState.Empty, newHiddenWord);
+        UserGuess = Settings.GetRandomHiddenWord(null, Random, false);
         await AddGuess();
     }
 
@@ -209,9 +221,9 @@
         var guess = GetRealGuess();
         if (guess is null) return;
 
-        var newGuessResult = GuessResult.GetWorstCase(guess, GameState, Settings);
+        var newGuessResult = GuessResult.ScoreWord(_hiddenWord, guess);
         
-        await SetGameState(GameState.Add(newGuessResult));
+        await SetGameState(GameState.Add(newGuessResult), _hiddenWord);
         UserGuess = "";
 
         if (GameState.IsWin)
@@ -228,6 +240,8 @@
             var gameResult = new GameResult(null, hiddenWord);
             await SetHistory(History.Add(gameResult));
         }
+         
+        
     }
     
 

@@ -1,4 +1,5 @@
-﻿using Generator.Equals;
+﻿using System.Diagnostics.Contracts;
+using Generator.Equals;
 
 namespace EvilWords;
 
@@ -19,7 +20,7 @@ public partial record GuessResult([property: OrderedEquality] IReadOnlyList<Char
 
     public GuessResultOptimizer ToGro() => GuessResultOptimizer.Create(this);
 
-
+    
     public static GuessResult GetWorstCase(string guess, GameState state, GameSettings settings)
     {
         var gro = state.MakeGuessResultOptimizer()?? GuessResultOptimizer.Create(settings);
@@ -48,6 +49,7 @@ public partial record GuessResult([property: OrderedEquality] IReadOnlyList<Char
     /// Scores the word.
     /// Assumes the correct word and the guess are both in the same case
     /// </summary>
+    [Pure]
     public static GuessResult ScoreWord(string hiddenWord, string guess)
     {
         if (guess.Length != hiddenWord.Length)
