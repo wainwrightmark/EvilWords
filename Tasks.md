@@ -1,13 +1,15 @@
 - [x] Version Control
 - [x] WASM
-- [ ] Continuous Integration / Deployment
-- [ ] Run as Task
+- [x] Continuous Integration / Deployment
+- [x] Run as Task
 - [ ] Fluxor
-- [ ] Local Storage
+- [x] Local Storage
 - [ ] "Nice Words"
 - [ ] Other Game Sizes
 - [ ] Way of showing available letters
 - [ ] Letter coloring in input box
 - [x] Confetti
 - [x] Hidden word is first guess next time
-- [xor] Hidden word is an insult :)
+- [x] Hidden word is an insult :)
+- [ ] Improve Chart
+- [ ] Separate Chart page

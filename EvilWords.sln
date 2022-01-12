@@ -11,10 +11,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EvilWords.Benchmark", "Evil
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{915655EA-1DDC-4A35-AD4A-132249BEAFE8}"
 	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
 		Tasks.md = Tasks.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EvilWords.BlazorWASM", "EvilWords.BlazorWASM\EvilWords.BlazorWASM.csproj", "{F98D076A-134E-42F2-B816-C16D425A0445}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EvilWords.BlazorWASM", "EvilWords.BlazorWASM\EvilWords.BlazorWASM.csproj", "{F98D076A-134E-42F2-B816-C16D425A0445}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
