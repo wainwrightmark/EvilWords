@@ -1,6 +1,7 @@
 ﻿@using System.Collections.Immutable
 @using BlafettisLib
 @using MudBlazor
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
 
 
 
@@ -91,17 +92,61 @@
     
 
 </MudList>
-<Blafettis @ref="blafettis" duration="8000" elementCount="150" />
+<Blafettis @ref="Blafettis" duration="8000" elementCount="150" />
 
 @code{
 
-    public RunHistory History { get; set; } =RunHistory.Empty;
 
-    public GameState GameState { get; set; } = GameState.Empty;
+    public RunHistory History => _history;
+    public GameState GameState => _gameState;
+
+    private RunHistory _history = RunHistory.Empty;
+    private GameState _gameState = GameState.Empty;
+
+    private const string RunHistoryKey = "Evil5RunHistory";
+    private const string GameStateKey = "Evil5GameState";
+
+    private async Task SetHistory(RunHistory runHistory)
+    {
+        await _localStorage.SetItemAsync(RunHistoryKey, runHistory);
+        _history = runHistory;
+    }
+    
+    private async Task SetGameState(GameState gameState)
+    {
+        await _localStorage.SetItemAsStringAsync(GameStateKey, gameState.Serialize());
+        _gameState = gameState;
+    }
+
+    private async Task GetGameStateFromLocalStorage()
+    {
+        var serialized = await _localStorage.GetItemAsStringAsync(GameStateKey);
+
+        if(serialized is not null)
+            _gameState = GameStateSerialization.Deserialize(serialized);
+        else //Set initial game state
+        {
+            _gameState = GameState.Empty;
+            UserGuess = Settings.GetRandomHiddenWord(null, Random, true);
+            await AddGuess();
+        }
+    }
+
+    private async Task GetHistoryFromLocalStorage()
+    {
+        var stuff = await _localStorage.GetItemAsync<RunHistory>(RunHistoryKey);
+
+        if (stuff is not null)
+            _history = stuff;
+        else
+        {
+            _history = new RunHistory(ArraySegment<GameResult>.Empty);
+        }
+    }
 
     public GameSettings Settings { get; } = GameSettings.FiveLetter;
 
-    public bool IsGameOver { get; set; } = false;
+    public bool IsGameOver => GameState.IsWin || GameState.PreviousGuesses.Count >= Settings.MaxRounds;
 
     private string _userGuess = "";
 
@@ -113,39 +158,34 @@
     
     
     public Random Random = new();
-    protected Blafettis blafettis;
+#pragma warning disable CS8618
+    protected Blafettis Blafettis;
+#pragma warning restore CS8618
 
 
     /// <inheritdoc />
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
-        base.OnParametersSet();
-        if (string.IsNullOrWhiteSpace(UserGuess))
-        {
-            GameState = GameState.Empty;
-            UserGuess = Settings.GetRandomHiddenWord(null, Random, true);
-            AddGuess();
-            IsGameOver = false;
-        }
-        
-    }
+        await base.OnParametersSetAsync();
 
-    public void Restart()
+        await GetGameStateFromLocalStorage();
+    }
+    
+
+    public async Task Restart()
     {
-        string hiddenWord;
         var gro = GameState.MakeGuessResultOptimizer();
-        hiddenWord = Settings.GetRandomHiddenWord(gro, Random, true);
+        var hiddenWord = Settings.GetRandomHiddenWord(gro, Random, true);
         if (!IsGameOver)
         {
             var guessCount = GameState.IsWin ? GameState.PreviousGuesses.Count : null as int?;
             var gameResult = new GameResult(guessCount, hiddenWord);
-            History = History.Add(gameResult);
+            await SetHistory(History.Add(gameResult));
         }
 
         UserGuess = hiddenWord;
-        GameState = GameState.Empty;
-        AddGuess();
-        IsGameOver = false;
+        await SetGameState(GameState.Empty);
+        await AddGuess();
     }
 
 
@@ -163,7 +203,7 @@
 
     public bool IsGoodGuess() => GetRealGuess() is not null;
 
-    private void AddGuess()
+    private async Task AddGuess()
     {
         var guess = GetRealGuess();
         if (guess is null) return;
@@ -171,26 +211,25 @@
         var newGuessResult = GuessResult.GetWorstCase(guess, GameState, Settings);
 
         GuessResult.ScoreWord(guess, guess);
-        GameState = GameState.Add(newGuessResult);
+        await SetGameState(GameState.Add(newGuessResult));
         UserGuess = "";
 
         if (GameState.IsWin)
         {
-            IsGameOver = true;
             var gameResult = new GameResult(GameState.PreviousGuesses.Count, guess);
-            History = History.Add(gameResult);
-            blafettis.RaiseConfetti();  // raise confetti via method
-
+            await SetHistory(History.Add(gameResult));
+            Blafettis.RaiseConfetti();  // raise confetti via method
         }
 
         if (GameState.PreviousGuesses.Count >= Settings.MaxRounds)
         {
             var gro = GameState.MakeGuessResultOptimizer();
             var hiddenWord = Settings.GetRandomHiddenWord(gro, Random, true);
-            IsGameOver = true;
             var gameResult = new GameResult(null, hiddenWord);
-            History = History.Add(gameResult);
+            await SetHistory(History.Add(gameResult));
         }
+         
+        await SetGameState(GameState);
     }
     
 

@@ -22,15 +22,15 @@ public static class Helpers
 }
 
 [Equatable]
-public partial record RunHistory([property: OrderedEquality] ImmutableList<GameResult> Results)
+public partial record RunHistory([property: OrderedEquality] IReadOnlyList<GameResult> Results)
 {
     public static RunHistory Empty { get; } = new (ImmutableList<GameResult>.Empty);
 
     [Pure]
-    public RunHistory Add(GameResult gameResult) => this with { Results = Results.Add(gameResult) };
+    public RunHistory Add(GameResult gameResult) => this with { Results = Results.ToImmutableList().Add(gameResult) };
 }
 
 public readonly record struct GameResult(int? Guesses, string HiddenWord)
 {
-    public bool WasWin => Guesses.HasValue;
+    public bool WasWin() => Guesses.HasValue;
 }
