@@ -63,7 +63,8 @@
     }
     else
     {
-        <MudListItem>
+        const string inputListItemKey = "inputListItem";
+        <MudListItem @key="inputListItemKey">
         
             <MudButtonGroup>
                 <MudTextField
@@ -74,7 +75,9 @@
                     InputType="InputType.Text"
                     Immediate="true"
                     Pattern="@Settings.Pattern"
-                    Style="width:fit-content"/>
+                    Style="width:fit-content"
+                    OnKeyPress="OnInputKeyPress"
+                    />
                 <MudIconButton
                     Icon="@Icons.Filled.Add"
                     OnClick="AddGuess"
@@ -229,6 +232,13 @@
             await SetHistory(History.Add(gameResult));
         }
     }
-    
+
+    private async Task OnInputKeyPress(KeyboardEventArgs obj)
+    {
+        const string enterKey = "Enter";
+
+        if (obj.Key.Equals(enterKey))
+            await AddGuess();
+    }
 
 }

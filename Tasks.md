@@ -13,3 +13,8 @@
 - [x] Hidden word is an insult :)
 - [ ] Improve Chart
 - [ ] Separate Chart page
+- [x] Enter key should work
+- [x] Refocus the input component after submitting
+- [ ] Game is broken
+- [ ] Solver should cancel properly
+- [ ] Use same component for nice and evil
