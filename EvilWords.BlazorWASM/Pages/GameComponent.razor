@@ -1,9 +1,5 @@
-﻿@using System.Collections.Immutable
-@using BlafettisLib
-@using MudBlazor
+﻿@using BlafettisLib
 @inject Blazored.LocalStorage.ILocalStorageService _localStorage
-
-
 
 <MudList>
     @for (var guessResultIndex = 0; guessResultIndex < GameState.PreviousGuesses.Count; guessResultIndex++)
@@ -106,8 +102,16 @@
     private RunHistory _history = RunHistory.Empty;
     private GameState _gameState = GameState.Empty;
 
-    private const string RunHistoryKey = "Evil5RunHistory";
-    private const string GameStateKey = "Evil5GameState";
+    [Parameter]
+    public bool IsEvil { get; set; }
+
+    private string RunHistoryKey => (IsEvil? "Evil": "Nice") +Settings.WordLength + "RunHistory";
+        
+    private string GameStateKey => (IsEvil? "Evil": "Nice") +Settings.WordLength + "GameState";
+
+    private string HiddenWordKey => (IsEvil? "Evil": "Nice") +Settings.WordLength + "HiddenWord";
+
+    private string _hiddenWord = "";
 
     private async Task SetHistory(RunHistory runHistory)
     {
@@ -115,21 +119,36 @@
         _history = runHistory;
     }
     
-    private async Task SetGameState(GameState gameState)
+    private async Task SetGameState(GameState gameState, string hw)
     {
         await _localStorage.SetItemAsStringAsync(GameStateKey, gameState.Serialize());
         _gameState = gameState;
+
+        if (!IsEvil)
+        {
+            await _localStorage.SetItemAsStringAsync(HiddenWordKey, hw);
+            _hiddenWord = hw;
+        }
     }
 
     private async Task GetGameStateFromLocalStorage()
     {
         var serialized = await _localStorage.GetItemAsStringAsync(GameStateKey);
 
-        if(serialized is not null)
+        if (serialized is not null)
+        {
             _gameState = GameStateSerialization.Deserialize(serialized);
+            var hw = await _localStorage.GetItemAsStringAsync(HiddenWordKey);
+            _hiddenWord = hw;
+        }
+            
         else //Set initial game state
         {
             _gameState = GameState.Empty;
+
+            if(!IsEvil)
+                _hiddenWord = Settings.GetRandomHiddenWord(_gameState.MakeGuessResultOptimizer(), Random, false);
+
             UserGuess = Settings.GetRandomHiddenWord(null, Random, true);
             await AddGuess();
         }
@@ -178,8 +197,18 @@
 
     public async Task Restart()
     {
-        var gro = GameState.MakeGuessResultOptimizer();
-        var hiddenWord = Settings.GetRandomHiddenWord(gro, Random, true);
+        string hiddenWord;
+        if (IsEvil)
+        {
+            var gro = GameState.MakeGuessResultOptimizer();
+            hiddenWord = Settings.GetRandomHiddenWord(gro, Random, true);
+        }
+        else
+        {
+            hiddenWord = _hiddenWord;
+        }
+
+        
         if (!IsGameOver)
         {
             var guessCount = GameState.IsWin ? GameState.PreviousGuesses.Count : null as int?;
@@ -187,8 +216,12 @@
             await SetHistory(History.Add(gameResult));
         }
 
-        UserGuess = hiddenWord;
-        await SetGameState(GameState.Empty);
+        UserGuess = hiddenWord; //The first guess of the next game is the previous hidden word
+        var newHiddenWord = IsEvil?
+            "" :
+            Settings.GetRandomHiddenWord(null, Random, false);
+        
+        await SetGameState(GameState.Empty, newHiddenWord);
         await AddGuess();
     }
 
@@ -212,9 +245,13 @@
         var guess = GetRealGuess();
         if (guess is null) return;
 
-        var newGuessResult = GuessResult.GetWorstCase(guess, GameState, Settings);
+        var newGuessResult =
+            IsEvil?
+            GuessResult.GetWorstCase(guess, GameState, Settings):
+            GuessResult.ScoreWord(_hiddenWord, guess)
+        ;
         
-        await SetGameState(GameState.Add(newGuessResult));
+        await SetGameState(GameState.Add(newGuessResult), _hiddenWord);
         UserGuess = "";
 
         if (GameState.IsWin)

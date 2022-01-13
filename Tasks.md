@@ -4,7 +4,7 @@
 - [x] Run as Task
 - [ ] Fluxor
 - [x] Local Storage
-- [ ] "Nice Words"
+- [x] "Nice Words"
 - [ ] Other Game Sizes
 - [ ] Way of showing available letters
 - [ ] Letter coloring in input box
@@ -17,4 +17,4 @@
 - [x] Refocus the input component after submitting
 - [x] Game is broken
 - [ ] Solver should cancel properly
-- [ ] Use same component for nice and evil
+- [x] Use same component for nice and evil
