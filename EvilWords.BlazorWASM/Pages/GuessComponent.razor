@@ -1,0 +1,32 @@
+﻿@for (var charResultIndex = 0; charResultIndex < GuessResult.Results.Count; charResultIndex++)
+{
+    var cri = charResultIndex;
+    var charResult = GuessResult.Results[charResultIndex];
+
+    <MudChip
+        Color="charResult.ResultColor.GetColor()"
+        Variant="Variant.Filled"
+        Label="true"
+        OnClick="() => OnClick(cri)" Style="margin: 1px" Size="Size">
+        @charResult.Character
+    </MudChip>
+}
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public GuessResult GuessResult { get; set; }
+
+    [Parameter]
+    public Action<int>? ClickAction { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public Size Size { get; set; }
+
+    private void OnClick(int index)
+    {
+        if (ClickAction is not null) 
+            ClickAction(index);
+    }
+}

@@ -6,18 +6,11 @@
     {
         var guessResult = GameState.PreviousGuesses[guessResultIndex];
 
-        <MudListItem>
+        <MudListItem >
             
-            @for (var charResultIndex = 0; charResultIndex < guessResult.Results.Count; charResultIndex++)
-            {
-                var charResult = guessResult.Results[charResultIndex];
-
-                <MudButton
-                    Color="charResult.ResultColor.GetColor()"
-                    Variant="Variant.Filled">
-                    @charResult.Character
-                </MudButton>
-            }
+            <MudListItem>
+                <GuessComponent Size="Size.Large" GuessResult="guessResult" />
+            </MudListItem>
 
         </MudListItem>
     }

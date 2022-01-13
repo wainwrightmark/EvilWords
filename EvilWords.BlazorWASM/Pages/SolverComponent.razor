@@ -13,22 +13,11 @@
         var gri = guessResultIndex;
 
         <MudListItem>
-
-            @for (var charResultIndex = 0; charResultIndex < guessResult.Results.Count; charResultIndex++)
-            {
-                var cri = charResultIndex;
-                var charResult = guessResult.Results[charResultIndex];
-
-                <MudButton
-                    Color="charResult.ResultColor.GetColor()"
-                    Variant="Variant.Filled"
-                    OnClick="() => CycleResult(gri, cri)">
-                    @charResult.Character
-                </MudButton>
-            }
+            <GuessComponent Size="Size.Large" GuessResult="guessResult" ClickAction="cri => CycleResult(gri,cri)"/>
             <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="() => RemoveGuesses(gri)"/>
-
         </MudListItem>
+
+        
     }
 
 
@@ -61,7 +50,7 @@
     public GameState GameState { get; set; } = new(ImmutableArray<GuessResult>.Empty);
 
     public GameSettings Settings { get; } = GameSettings.FiveLetter;
-
+    
     private (IWorker Worker, IWorkerBackgroundService<SolverService> Service)? Worker { get; set; }
 
     private string _userGuess = "";
