@@ -3,7 +3,7 @@
 @using MudBlazor
 @inject Blazored.LocalStorage.ILocalStorageService _localStorage
 
-
+@*<MudButton OnClick="()=> Blafettis.RaiseConfetti()">Confetti</MudButton>*@
 
 <MudList>
     @for (var guessResultIndex = 0; guessResultIndex < GameState.PreviousGuesses.Count; guessResultIndex++)
