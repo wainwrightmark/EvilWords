@@ -1,10 +1,8 @@
-﻿@using MudBlazor
-@using System.Collections.Concurrent
-@using System.Collections.Immutable
-@using System.Text.Json
-@using BlazorWorker.BackgroundServiceFactory
-@using BlazorWorker.Core
+﻿@using BlazorWorker.Core
 @using BlazorWorker.WorkerBackgroundService
+@using BlazorWorker.BackgroundServiceFactory
+@using System.Collections.Immutable
+@using Generator.Equals
 @implements IDisposable;
 @inject IWorkerFactory _workerFactory
 
@@ -53,7 +51,6 @@
                 Disabled="!IsGoodGuess()"/>
         </MudButtonGroup>
 
-
     </MudListItem>
 
 
@@ -79,21 +76,28 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+        await ResetWorker();
 
-        if (Worker is null)
+        StateChanged();
+    }
+
+    private async Task ResetWorker()
+    {
+        if (Worker is not null)
         {
-            var worker = await _workerFactory.CreateAsync();
-            var service = await worker.CreateBackgroundServiceAsync<SolverService>(
-                x => x
-                    .AddConventionalAssemblyOfService()
-                    .AddAssemblyOf<Generator.Equals.EquatableAttribute>()
-                    .AddAssemblies("Microsoft.Bcl.HashCode.dll", "System.Linq.Parallel.dll", "System.Diagnostics.Tracing.dll")
-                );
-
-            Worker = (worker, service);
-
-            StateChanged();
+            await Worker.Value.Service.DisposeAsync();
+            await Worker.Value.Worker.DisposeAsync();
         }
+
+        var worker = await _workerFactory.CreateAsync();
+        var service = await worker.CreateBackgroundServiceAsync<SolverService>(
+            x => x
+                .AddConventionalAssemblyOfService()
+                .AddAssemblyOf<EquatableAttribute>()
+                .AddAssemblies("Microsoft.Bcl.HashCode.dll", "System.Linq.Parallel.dll", "System.Diagnostics.Tracing.dll")
+            );
+
+        Worker = (worker, service);
     }
 
     public void RemoveGuesses(int index)
@@ -106,23 +110,6 @@
 
     public Random Random = new();
 
-
-    private readonly record struct SuggestionData(string BestWord, IReadOnlyList<string> RemainingPossibilities)
-    {
-        public string PossibilityText
-        {
-            get
-            {
-                if (RemainingPossibilities.Count == 0)
-                    return "No Possible Solutions";
-                else if (RemainingPossibilities.Count == 1)
-                    return $"Must be '{RemainingPossibilities.Single()}'";
-                else if (RemainingPossibilities.Count <= 4)
-                    return $"'{string.Join(", ", RemainingPossibilities)}'";
-                else return $"{RemainingPossibilities.Count} Possible Solutions";
-            }
-        }
-    };
 
     private SuggestionData? Suggestion { get; set; } = null;
 
@@ -199,10 +186,7 @@
         _cancellationTokenSource = newCts;
         Suggestion = null;
         StateHasChanged();
-
-        if (!Worker.HasValue)
-            return;
-
+        
         var serializedGameState = GameState.Serialize();
 
         var gro = GameState.MakeGuessResultOptimizer();
@@ -211,6 +195,8 @@
 
         if (possibilities.Count <= 0)
             bestGuess = null;
+        else if (possibilities.Count <= 1)
+            bestGuess = possibilities.Single();
         else
         {
             if (newCts.IsCancellationRequested)
@@ -218,6 +204,8 @@
 
             Suggestion = new SuggestionData(Suggestion?.BestWord ?? "", possibilities);
             StateHasChanged();
+
+            if(Worker is null)return;
 
             try
             {
@@ -241,7 +229,7 @@
             return;
         Suggestion = new SuggestionData(bestGuess ?? "", possibilities);
 
-
+        _cancellationTokenSource = null;
         StateHasChanged();
 
         static string GetInnerMostMessage(Exception e)

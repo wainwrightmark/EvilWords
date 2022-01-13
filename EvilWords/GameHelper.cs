@@ -32,8 +32,8 @@ public static class GameHelper
     }
 
 
-    public static int RunGame(string hiddenWord, GameSettings gameSettings, SolveSettings solveSettings,
-        ConcurrentDictionary<GameState, string>? resultCache,
+    public static int RunGame(string? hiddenWord, GameSettings gameSettings, SolveSettings solveSettings,
+        ConcurrentDictionary<GameState, string?>? resultCache,
         ILogger logger)
     {
         var sw = Stopwatch.StartNew();
@@ -44,7 +44,13 @@ public static class GameHelper
         {
             rounds++;
             var guess = Solver.GetBestGuess(gs, GameSettings.FiveLetter, solveSettings, resultCache);
-            var guessResult = GuessResult.ScoreWord(hiddenWord, guess);
+            if (guess is null) throw new Exception("No Possible Guess");
+
+            GuessResult guessResult;
+            if (hiddenWord is not null)
+                guessResult = GuessResult.ScoreWord(hiddenWord, guess);
+            else guessResult = GuessResult.GetWorstCase(guess, gs, gameSettings);
+            
             var gro = gs.MakeGuessResultOptimizer();
 
             var remainingSolutions = gro is null

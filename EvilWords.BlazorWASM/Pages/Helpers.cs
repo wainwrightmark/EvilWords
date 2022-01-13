@@ -34,3 +34,20 @@ public readonly record struct GameResult(int? Guesses, string HiddenWord)
 {
     public bool WasWin() => Guesses.HasValue;
 }
+
+public readonly record struct SuggestionData(string BestWord, IReadOnlyList<string> RemainingPossibilities)
+{
+    public string PossibilityText
+    {
+        get
+        {
+            if (RemainingPossibilities.Count == 0)
+                return "No Possible Solutions";
+            if (RemainingPossibilities.Count == 1)
+                return $"Must be '{RemainingPossibilities.Single()}'";
+            if (RemainingPossibilities.Count <= 4)
+                return $"'{string.Join(", ", RemainingPossibilities)}'";
+            return $"{RemainingPossibilities.Count} Possible Solutions";
+        }
+    }
+}

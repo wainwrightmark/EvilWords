@@ -49,22 +49,6 @@ public class SolverService
 
 public static class Solver
 {
-    public static int CountSolutionsEliminatedByGuess(GuessResultOptimizer? gro, string guessWord,
-        IReadOnlyCollection<string> possibleHiddenWords)
-    {
-        var total = 0;
-        foreach (var solution in possibleHiddenWords)
-        {
-            var guessResult = GuessResult.ScoreWord(solution, guessWord);
-            var possibleGro = GuessResultOptimizer.Create(guessResult);
-            var newGro = gro is null ? possibleGro : gro.Combine(possibleGro);
-
-            var solutionsEliminated = possibleHiddenWords.Count(s => !newGro.Allow(s));
-            total += solutionsEliminated;
-        }
-
-        return total;
-    }
 
     public static int? CountSolutionsRemainingAfterGuess(
         GuessResultOptimizer? gro,
@@ -73,14 +57,21 @@ public static class Solver
         int? giveUpAfter)
     {
         var total = 0;
-        foreach (var solution in possibleHiddenWords)
+
+        var groupings = possibleHiddenWords
+            .Select(hiddenWord => GuessResult.ScoreWord(hiddenWord, guessWord))
+            .GroupBy(x => x)
+            .Select(x=>(x.Key, Multiplier: x.Count()))
+            .OrderByDescending(x=>x.Multiplier);
+
+
+        foreach (var (guessResult, multiplier) in groupings)
         {
-            var guessResult = GuessResult.ScoreWord(solution, guessWord);
             var possibleGro = GuessResultOptimizer.Create(guessResult);
             var newGro = gro is null ? possibleGro : gro.Combine(possibleGro);
 
             var solutionsRemaining = possibleHiddenWords.Count(newGro.Allow);
-            total += solutionsRemaining;
+            total += (multiplier * solutionsRemaining);
 
             if (total > giveUpAfter)
                 return null;
@@ -151,6 +142,7 @@ public static class Solver
         var bestGuess = possibleGuesses
             .AsParallel()
             .WithCancellation(cancellationToken)
+
             .Select(guessWord =>
             {
                 var possibilitiesRemaining =

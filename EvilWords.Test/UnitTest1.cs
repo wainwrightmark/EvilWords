@@ -66,10 +66,7 @@ public class UnitTest1
                     {
                         r1.Should().BeFalse($"'{guess}' should eliminate itself if guessed under '{hiddenWord}'");
                     }
-
-                    
                 }
-                    
             }
         }
     }
@@ -81,12 +78,13 @@ public class UnitTest1
     [InlineData("SOLVE",  2, 1000, 123)]
     [InlineData("ANGER", 4, 100, 123)]
     [InlineData("ANGER", 4, 100, 456)]
-    [InlineData("ANGER", 4, null, 123)]
+    [InlineData("WIGHT", 4, 100, 123)]
     [InlineData("ANGER", 4, null, 123)]
     [InlineData("ANGER", 4, null, 456)]
-    [InlineData("ANGER", 4, null, 456)]
+    [InlineData("FUZZY", 5, null, 456)]
+    [InlineData(null, 5, null, 456)]
     
-    public void TestGame(string hiddenWord,  int expectedRounds, int? maxSolutionsToTry, int seed)
+    public void TestGame(string? hiddenWord,  int expectedRounds, int? maxSolutionsToTry, int seed)
     {
         var settings = GameSettings.FiveLetter;
         var logger = new XunitLogger(TestOutputHelper, "TestGame");
@@ -96,7 +94,7 @@ public class UnitTest1
             SolveSettings.FiveLetterOptimalGuesses
         ){};
         
-        var totalRounds = GameHelper.RunGame(hiddenWord.ToUpperInvariant(), settings, solveSettings, null, logger);
+        var totalRounds = GameHelper.RunGame(hiddenWord?.ToUpperInvariant(), settings, solveSettings, null, logger);
         
         totalRounds.Should().Be(expectedRounds);
     }
@@ -104,8 +102,8 @@ public class UnitTest1
     [Theory]
     [InlineData(100, 10, 123)]
     [InlineData(100, 10, 456)]
-    [InlineData(100, 10, 123)]
-    [InlineData(100, 10, 456)]
+    [InlineData(100, 100, 123)]
+    [InlineData(100, 100, 456)]
     public void TestManyGames(int gamesToPlay, int? stochasticSolutions, int seed)
     {
         var random = new Random(seed);
@@ -184,26 +182,26 @@ public class UnitTest1
         var settings = GameSettings.FiveLetter;
         var sw = Stopwatch.StartNew();
 
-        var total = Solver.CountSolutionsEliminatedByGuess(
+        var total = Solver.CountSolutionsRemainingAfterGuess(
             null,
             guess.ToUpperInvariant(),
-            settings.PossibleHiddenWords);
+            settings.PossibleHiddenWords, null);
 
         var fullTotal = settings.PossibleHiddenWords.Count * settings.PossibleHiddenWords.Count;
 
-        var totalRemaining = fullTotal - total;
+        var totalEliminated = fullTotal - total;
 
         var average = total / settings.PossibleHiddenWords.Count;
-        var averageRemaining = totalRemaining / settings.PossibleHiddenWords.Count;
+        var averageEliminated = totalEliminated / settings.PossibleHiddenWords.Count;
 
         sw.Stop();
         
         TestOutputHelper.WriteLine(sw.Elapsed.ToString());
         TestOutputHelper.WriteLine($"{guess}");
-        TestOutputHelper.WriteLine($"Total: {total}");
-        TestOutputHelper.WriteLine($"TotalRemaining: {totalRemaining}");
-        TestOutputHelper.WriteLine($"Average: {average}");
-        TestOutputHelper.WriteLine($"AverageRemaining: {averageRemaining}");
+        TestOutputHelper.WriteLine($"Total Remaining: {total}");
+        TestOutputHelper.WriteLine($"Total Eliminated: {totalEliminated}");
+        TestOutputHelper.WriteLine($"Average Remaining: {average}");
+        TestOutputHelper.WriteLine($"Average Eliminated: {averageEliminated}");
     }
     
     

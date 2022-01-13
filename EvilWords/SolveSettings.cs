@@ -151,5 +151,7 @@ public record SolveSettings
 
     public bool EliminateUselessGuesses { get; set; } = true;
 
+    public bool GroupGuessResultsDuringCount { get; set; } = true;
+
     public IReadOnlyDictionary<string, IReadOnlyList<string>> OptimalGuessDictionary { get; init; }
 }

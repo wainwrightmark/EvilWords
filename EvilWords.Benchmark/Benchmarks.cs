@@ -9,9 +9,14 @@ namespace EvilWords.Benchmark;
 [SimpleJob(RunStrategy.Monitoring, invocationCount: 1, targetCount: 2)]
 public class Benchmarks
 {
-    [Params(true, false)]
+    [Params(true)]
     public bool UseParallel { get; set; }
     
+    [Params(true, false)]
+    public bool UseFastElimination { get; set; }
+    
+    [Params(true, false)]
+    public bool GamesAreEvil { get; set; }
 
     public int NumberOfGames { get; set; } = 100;
 
@@ -29,9 +34,9 @@ public class Benchmarks
             null,
             UseParallel,
             SolveSettings.FiveLetterOptimalGuesses
-        );
+        ){EliminateUselessGuesses = UseFastElimination};
 
-        var dict = new ConcurrentDictionary<GameState, string>();
+        var dict = new ConcurrentDictionary<GameState, string?>();
 
         Solver.GetBestGuess(new GameState(ImmutableArray<GuessResult>.Empty),
             gameSettings,
@@ -41,7 +46,13 @@ public class Benchmarks
 
         for (var i = 0; i < NumberOfGames; i++)
         {
-            var word = gameSettings.GetRandomHiddenWord(null, random, false);
+
+            string? word;
+            if (GamesAreEvil)
+                word = null;
+            else 
+                word = gameSettings.GetRandomHiddenWord(null, random, false);
+
             GameHelper.RunGame(word, gameSettings, solveSettings, dict, NullLogger.Instance);
         }
     }
