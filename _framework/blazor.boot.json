@@ -7,14 +7,14 @@
   "linkerEnabled": true,
   "resources": {
     "assembly": {
-      "blazor-dom-confetti.dll": "sha256-TbymZcsDh2MvIa2K6E0UNIxQXhB5i\/\/3N3iIdH71nss=",
+      "blazor-dom-confetti.dll": "sha256-k6A\/+hTTQCi+E0HUg5f2q+JrRk4YIu0fdAiw7u8m0bU=",
       "Blazored.LocalStorage.dll": "sha256-ItMv+HytRb8SgPKYiz75PK0k+DFgN1E247PZT\/8lODs=",
       "BlazorWorker.BackgroundServiceFactory.dll": "sha256-Y1fGskNFcmdpValvZNDTKiuInQ3j5yl5f0A4ixWSWRw=",
       "BlazorWorker.Core.dll": "sha256-SwdjrzSdMTK0p6pOYhA34CV9djek034Uc\/WNkk5AghQ=",
       "BlazorWorker.WorkerBackgroundService.dll": "sha256-+8weot1p6znGhQdA10VOC0S1Mx+gyUz8B67lKw6Ek0U=",
       "BlazorWorker.WorkerCore.dll": "sha256-KtKiHttJCSy+YPU3e787u\/is3ryk6DGGHRpxOLyrIOE=",
-      "EvilWords.BlazorWASM.dll": "sha256-er3rFJGez1Fx6kFLD9pIYhw054MzqourhAkPQNtoKjk=",
-      "EvilWords.dll": "sha256-pFoe0MUFQimWL\/pmxeFlXuf45GedAYDaRm+bI5fR1d0=",
+      "EvilWords.BlazorWASM.dll": "sha256-5CxQIpGDodYVygW44OxkwMrtHH\/KCN5Q0tguJBa2Vzo=",
+      "EvilWords.dll": "sha256-O1+ZIzC3mM3BNUQqI3OR7y+T3pXb9a9IMJJQGHkyYNk=",
       "Generator.Equals.Runtime.dll": "sha256-CMjBbqRNS+IOrICOYT\/XTsOkWuHfKt3HX77jsAqp7fo=",
       "Microsoft.AspNetCore.Components.dll": "sha256-6oSM4CKAOLsiL97OfnxEBcrgj80DLIluTL1XkAYTiK8=",
       "Microsoft.AspNetCore.Components.Forms.dll": "sha256-jl5A7Pv+VfrShD3mNcK1EVIQ1luoqe6N9FmQKx226kc=",
