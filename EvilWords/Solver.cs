@@ -11,6 +11,12 @@ public class SolverService
 
     private readonly ConcurrentDictionary<GameState, string?>? _resultCache = new();
 
+    public void Cancel()
+    {
+        _cts?.Cancel();
+        _cts = null;
+    }
+
     /// <summary>
     /// Gets the best guess to use in this game state
     /// </summary>
@@ -19,8 +25,8 @@ public class SolverService
     )
     {
         _cts?.Cancel();
-
-        _cts = new CancellationTokenSource();
+        var newCts= new CancellationTokenSource();
+        
 
         var gameState = GameStateSerialization.Deserialize(serializedGameState);
         var solveSettings =
@@ -37,7 +43,7 @@ public class SolverService
             GameSettings.FiveLetter,
             solveSettings,
             _resultCache,
-            _cts.Token);
+            newCts?.Token);
     }
 }
 

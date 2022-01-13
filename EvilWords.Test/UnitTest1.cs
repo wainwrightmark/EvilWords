@@ -32,6 +32,17 @@ public class UnitTest1
         r.ColorText().Should().Be(expectedColors.ToUpperInvariant());
     }
 
+    [Theory]
+    [InlineData("SOARE-RRRRR_BUNDT-RRRRG_FILUM-RGRRR", "WIGHT", "RGGGG")]
+    public void TestWorstCases(string stateSerialized, string nextGuess, string nextGuessColors)
+    {
+        var state = GameStateSerialization.Deserialize(stateSerialized);
+
+        var worstCase = GuessResult.GetWorstCase(nextGuess, state, GameSettings.FiveLetter);
+
+        worstCase.ColorText().Should().Be(nextGuessColors);
+    }
+
     [Fact]
     public void TestEliminations()
     {

@@ -116,7 +116,7 @@
                 if (RemainingPossibilities.Count == 0)
                     return "No Possible Solutions";
                 else if (RemainingPossibilities.Count == 1)
-                    return "Only Solution";
+                    return $"Must be '{RemainingPossibilities.Single()}'";
                 else if (RemainingPossibilities.Count <= 4)
                     return $"'{string.Join(", ", RemainingPossibilities)}'";
                 else return $"{RemainingPossibilities.Count} Possible Solutions";
@@ -151,7 +151,6 @@
 
         var newGuessResult = GuessResult.GetWorstCase(guess, GameState, Settings);
 
-        GuessResult.ScoreWord(guess, guess); //assume guess was correct
         GameState = GameState.Add(newGuessResult);
         UserGuess = "";
         StateChanged();
@@ -196,7 +195,8 @@
     private async Task StateChanged()
     {
         _cancellationTokenSource?.Cancel();
-        _cancellationTokenSource = new CancellationTokenSource();
+        var newCts = new CancellationTokenSource();
+        _cancellationTokenSource = newCts;
         Suggestion = null;
         StateHasChanged();
 
@@ -213,14 +213,20 @@
             bestGuess = null;
         else
         {
-            if (_cancellationTokenSource.IsCancellationRequested)
+            if (newCts.IsCancellationRequested)
                 return;
+
+            Suggestion = new SuggestionData(Suggestion?.BestWord ?? "", possibilities);
+            StateHasChanged();
 
             try
             {
-                bestGuess = await Worker.Value.Service.RunAsync(x =>
-                    x.GetBestGuess(serializedGameState)
-                    );
+                await Worker.Value.Service.RunAsync(x => x.Cancel());
+
+                bestGuess =
+                    await Worker.Value.Service.RunAsync(x =>
+                        x.GetBestGuess(serializedGameState)
+                        );
             }
             catch (Exception e)
             {
@@ -231,9 +237,9 @@
             }
         }
 
-        if (_cancellationTokenSource.IsCancellationRequested)
+        if (newCts.IsCancellationRequested)
             return;
-        Suggestion = new SuggestionData(bestGuess??"", possibilities);
+        Suggestion = new SuggestionData(bestGuess ?? "", possibilities);
 
 
         StateHasChanged();

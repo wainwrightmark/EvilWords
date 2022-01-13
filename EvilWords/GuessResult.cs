@@ -39,7 +39,7 @@ public partial record GuessResult([property: OrderedEquality] IReadOnlyList<Char
         ).GroupBy(x=>x.guessResult, x=>x.hiddenWord)
             
             .OrderByDescending(x=>x.Count())
-            .ThenBy(x=>x.Key.Word() == guess)
+            .ThenBy(x=>x.Any(w=>w == guess))
             .First();
 
         return worstCaseHiddenWord.Key;

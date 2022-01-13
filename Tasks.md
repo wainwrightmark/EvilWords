@@ -15,6 +15,6 @@
 - [ ] Separate Chart page
 - [x] Enter key should work
 - [x] Refocus the input component after submitting
-- [ ] Game is broken
+- [x] Game is broken
 - [ ] Solver should cancel properly
 - [ ] Use same component for nice and evil
