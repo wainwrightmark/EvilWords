@@ -11,8 +11,8 @@
 - [x] Confetti
 - [x] Hidden word is first guess next time
 - [x] Hidden word is an insult :)
-- [ ] Improve Chart
-- [ ] Separate Chart page
+- [x] Improve Chart
+- [x] Separate Chart page
 - [x] Enter key should work
 - [x] Refocus the input component after submitting
 - [x] Game is broken

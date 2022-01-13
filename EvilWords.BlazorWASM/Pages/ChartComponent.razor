@@ -1,0 +1,35 @@
+﻿@using System.Xml.Serialization
+<MudChart ChartType="ChartType.Bar" 
+          ChartOptions="@ChartOptions"
+          ChartSeries="@ChartSeries"  
+          XAxisLabels="@XAxisLabels"
+          Width="100%" 
+          Height="300px" 
+          
+
+/>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public RunHistory History { get; set; }
+
+    public const int MaxGuesses = 6;
+
+    public List<ChartSeries> ChartSeries => new()
+    {
+        new() { Data = @History.Results.Select(x => x.Guesses ?? 0d).ToArray() },
+        new() { Data = @History.Results.Select(x => x.Guesses.HasValue? 0d : MaxGuesses + 1) .ToArray() },
+    };
+
+    public string[] XAxisLabels => History.Results.Select(x => x.HiddenWord).ToArray();
+
+
+    public ChartOptions ChartOptions => new ()
+    {
+        
+        DisableLegend = true, XAxisLines = false, YAxisLines = false,
+        ChartPalette = new []{"Green", "Red"}
+    };
+
+}

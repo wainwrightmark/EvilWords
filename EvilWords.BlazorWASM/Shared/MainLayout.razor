@@ -1,6 +1,7 @@
-﻿@inherits LayoutComponentBase
+﻿@using EvilWords.BlazorWASM.Pages
+@inherits LayoutComponentBase
 
-<MudThemeProvider/>
+<MudThemeProvider @ref="_mudThemeProvider" Theme=" Themes.DarkTheme"/>
 <MudDialogProvider/>
 <MudSnackbarProvider/>
 
@@ -15,3 +16,11 @@
         </article>
     </main>
 </div>
+
+@code{
+
+    private MudThemeProvider _mudThemeProvider;
+
+    public MudTheme Theme => _mudThemeProvider?.IsDarkMode == true ? Themes.DarkTheme : Themes.DefaultTheme;
+
+}

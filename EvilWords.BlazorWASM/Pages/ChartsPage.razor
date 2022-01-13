@@ -1,0 +1,46 @@
+﻿@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+
+
+@if (Histories is not null)
+{
+    @foreach (var history in Histories)
+    {
+        <ChartComponent History="history"/>
+    }
+}
+else
+{
+    <MudSkeleton Animation="Animation.Pulse"/>
+}
+
+@code {
+    public List<RunHistory>? Histories { get; private set; }
+
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        if (Histories is null)
+        {
+            var histories = new List<RunHistory>();
+            var l = await _localStorage.LengthAsync(null);
+            for (int i = 0; i < l; i++)
+            {
+                var key = await _localStorage.KeyAsync(i, null);
+
+                if (key is not null && key.Contains("RunHistory"))
+                {
+                    var stuff = await _localStorage.GetItemAsync<RunHistory>(key);
+
+                    if (stuff is not null)
+                        histories.Add(stuff);
+                }
+
+            }
+            Histories = histories;
+        }
+    }
+
+}

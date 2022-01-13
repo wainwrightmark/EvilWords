@@ -41,21 +41,8 @@
         </MudListItem>
 
         <MudListItem>
-        
-            <MudChart ChartType="ChartType.Bar" 
-                      ChartOptions="new ChartOptions(){DisableLegend = true, XAxisLines = false, YAxisLines = false}"
-                      ChartSeries="@(new List<ChartSeries>(){
-                                       new (){Data =@History.Results.Select(x=>x.Guesses??0d).ToArray() }
-                                   })"  
-                      XAxisLabels="@History.Results.Select(x=>x.HiddenWord).ToArray()"
-                      Width="100%" 
-                      Height="200px"/>
-
-
-        
+            <ChartComponent History="History" />
         </MudListItem>
-
-
     }
     else
     {
@@ -103,6 +90,7 @@
     private GameState _gameState = GameState.Empty;
 
     [Parameter]
+    [EditorRequired]
     public bool IsEvil { get; set; }
 
     private string RunHistoryKey => (IsEvil? "Evil": "Nice") +Settings.WordLength + "RunHistory";
