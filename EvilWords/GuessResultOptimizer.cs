@@ -1,4 +1,6 @@
-﻿namespace EvilWords;
+﻿using Generator.Equals;
+
+namespace EvilWords;
 
 public class GROException : Exception
 {
@@ -8,11 +10,12 @@ public class GROException : Exception
     }
 }
 
-public record GuessResultOptimizer(int ExpectedLength,
-    (char c, int index)[] KnownCharacters,
-    ILookup<char, int> KnownBadCharacterIndexes,
-    (char c, int minCount)[] MinMultiplicities,
-    int?[] MaxMultiplicities)
+[Equatable]
+public partial record GuessResultOptimizer(int ExpectedLength,
+    [property:SetEquality] (char c, int index)[] KnownCharacters,
+    [property:SetEquality] ILookup<char, int> KnownBadCharacterIndexes,
+    [property:SetEquality] (char c, int minCount)[] MinMultiplicities,
+    [property:OrderedEquality] int?[] MaxMultiplicities)
 {
 
     public ResultColor? GetResultColor(int index, char c)

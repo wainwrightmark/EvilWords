@@ -50,17 +50,17 @@
     
     private (IWorker Worker, IWorkerBackgroundService<SolverService> Service)? Worker { get; set; }
 
-    private string _userGuess = "";
+    public ImmutableArray<char?> UserGuess;
 
-    public string UserGuess
+    private void ResetUserGuess()
     {
-        get => _userGuess;
-        set => _userGuess = value.ToUpperInvariant();
+        UserGuess = Enumerable.Repeat(null as char?, Settings.WordLength).ToImmutableArray();
     }
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
+        ResetUserGuess();
         await base.OnInitializedAsync();
         await ResetWorker();
 
@@ -106,11 +106,20 @@
 
     public string? GetRealGuess()
     {
-        var guess = UserGuess;
-        if (string.IsNullOrWhiteSpace(guess))
-            guess = Suggestion?.BestWord;
-        if (guess is null)
-            return null;
+        string guess;
+        if (UserGuess.Any(x => x.HasValue))
+        {
+            if (UserGuess.All(x => x.HasValue))
+            {
+                guess = new string(UserGuess.Select(x => x!.Value).ToArray());
+            }
+            else return null;
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(Suggestion?.BestWord)) return null;
+            guess = Suggestion.Value.BestWord;
+        }
 
         guess = new string(guess.Trim().ToUpperInvariant().Where(char.IsLetter).ToArray());
 
@@ -130,7 +139,7 @@
         var newGuessResult = GuessResult.GetWorstCase(guess, GameState, Settings);
 
         GameState = GameState.Add(newGuessResult);
-        UserGuess = "";
+        ResetUserGuess();
         StateChanged();
     }
 

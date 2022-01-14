@@ -54,8 +54,8 @@ public static class Solver
         GuessResultOptimizer? gro,
         string guessWord,
         IReadOnlyCollection<string> possibleHiddenWords,
-        int? giveUpAfter)
-    {
+    int? giveUpAfter)
+        {
         var total = 0;
 
         var groupings = possibleHiddenWords
@@ -69,8 +69,21 @@ public static class Solver
         {
             var possibleGro = GuessResultOptimizer.Create(guessResult);
             var newGro = gro is null ? possibleGro : gro.Combine(possibleGro);
+            
 
-            var solutionsRemaining = possibleHiddenWords.Count(newGro.Allow);
+            var solutionsRemaining =possibleHiddenWords.Count(newGro.Allow);
+
+            //TODO use a cache here somehow
+            //    solutionsRemainingCache.GetOrAdd(
+            //    newGro,
+            //    gro1 =>
+            //    {
+            //        var sr = possibleHiddenWords.Count(gro1.Allow);
+            //        return sr;
+            //    }
+            //);
+
+            
             total += (multiplier * solutionsRemaining);
 
             if (total > giveUpAfter)

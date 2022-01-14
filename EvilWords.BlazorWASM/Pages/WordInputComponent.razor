@@ -1,67 +1,86 @@
-﻿<MudButtonGroup>
+﻿@using System.Collections.Immutable
+<div class="mud-input-control mud-input-input-control" @onkeypress="OnInputKeyPress">
+    <MudButtonGroup>
 
-    @for (var i = 0; i < Settings.WordLength; i++)
+        @for (var i = 0; i < Settings.WordLength; i++)
+        {
+            var i1 = i;
+            char c;
+            Variant variant;
+            Color color;
+            var val = Text[i];
+
+            if (Placeholder.Length > i && Text.All(x => !x.HasValue))
+            {
+                c = Placeholder[i];
+                variant = Variant.Text;
+                color = GetColorFunc(i1, c);
+            }
+            else if (val.HasValue)
+            {
+                c = val.Value;
+                color = GetColorFunc(i1, c);
+                variant = Variant.Filled;
+            }
+            else
+            {
+                c = BlankChar; //Special blank character
+                color = Color.Dark;
+                variant = Variant.Outlined;
+            }
+            <MudChip
+                Color="@color"
+                Variant="@variant"
+                Label="@(CurrentIndex != i)"
+                Style="margin: 1px"
+                Size="Size" OnClick="() => ChipClicked(i1)">
+                @c
+            </MudChip>
+        }
+
+        @*<MudTextField
+            @ref="_textField"
+            Value="Text"
+            TextChanged="TextChanged"
+            MaxLength="@Settings.WordLength"
+            HelperText="@HelperText"
+            Placeholder="@Placeholder"
+            InputMode="InputMode.text"
+            InputType="InputType.Text"
+            Immediate="true"
+            Pattern="@Settings.Pattern"
+            Style="opacity: 0.50;"
+            OnKeyPress="OnInputKeyPress"/>*@
+        <MudIconButton
+            Icon="@Icons.Filled.Add"
+            OnClick="AddAction"
+            Disabled="IsAddDisabled"/>
+    </MudButtonGroup>
+
+
+    @if (!string.IsNullOrWhiteSpace(HelperText))
     {
-        var i1 = i;
-        char c;
-        Variant variant;
-        Color color;
-        if (Text.Length == 0 && Placeholder.Length > i)
-        {
-            c = Placeholder[i];
-            variant = Variant.Text;
-            color = GetColorFunc(i1, c);
-        }
-        else if (Text.Length <= i)
-        {
-            c = '⠀'; //Special blank character
-            color = Color.Dark;
-            variant = Variant.Outlined;
-        }
-        else
-        {
-            c = Text[i];
-            color = GetColorFunc(i1, c);
-            variant = Variant.Filled;
-        }
-        <MudChip
-            Color="@color"
-            Variant="@variant"
-            Label="true"
-            Style="margin: 1px"
-            Size="Size" OnClick="() => ChipClicked(i1)">
-            @c
-        </MudChip>
+        <div class="mud-input-control-helper-container">
+            <p class="mud-input-helper-text">
+                <div class="d-flex">
+                    <div class="mr-auto">@HelperText</div>
+                </div>
+            </p>
+        </div>
     }
 
-    <MudTextField
-        @ref="_textField"
-        Value="Text"
-        TextChanged="TextChanged"
-        MaxLength="@Settings.WordLength"
-        HelperText="@HelperText"
-        Placeholder="@Placeholder"
-        InputMode="InputMode.text"
-        InputType="InputType.Text"
-        Immediate="true"
-        Pattern="@Settings.Pattern"
-        Style="opacity: 0.50;"
-        OnKeyPress="OnInputKeyPress"/>
-    <MudIconButton
-        Icon="@Icons.Filled.Add"
-        OnClick="AddAction"
-        Disabled="IsAddDisabled"/>
-</MudButtonGroup>
+</div>
+
 
 @code {
 
     [Parameter]
     [EditorRequired]
-    public string Text { get; set; }
+    public ImmutableArray<char?> Text { get; set; }
 
     [Parameter]
     [EditorRequired]
-    public EventCallback<string> TextChanged { get; set; }
+    public EventCallback<ImmutableArray<char?>> TextChanged { get; set; }
 
     [Parameter]
     public string HelperText { get; set; }
@@ -89,31 +108,76 @@
     [EditorRequired]
     public Func<int, char, Color> GetColorFunc { get; set; }
 
-    private MudTextField<string> _textField;
+    public int CurrentIndex { get; private set; } = 0;
+    public const char BlankChar = ' ';
+
+    //private MudTextField<string> _textField;
 
     private async Task OnInputKeyPress(KeyboardEventArgs obj)
     {
-        if (IsAddDisabled) return;
         const string enterKey = "Enter";
+        const string backspaceKey = "Backspace";
+        const string deleteKey = "Delete";
 
         if (obj.Key.Equals(enterKey))
-            await AddAction();
+        {
+            if(!IsAddDisabled)
+                await AddAction();
+        }
+            
+        else if (obj.Key.Equals(backspaceKey))
+        {
+            await ClearPrevious();
+        }
+        else if (obj.Key.Equals(deleteKey))
+        {
+            await ClearCurrent();
+        }
+        else if (obj.Key.Length == 1 && char.IsLetter(obj.Key.Single()))
+        {
+            await InputLetter(char.ToUpperInvariant(obj.Key.Single()));
+        }
+    }
+
+    public async Task ClearPrevious()
+    {
+        if (CurrentIndex == 0)
+            return;
+        CurrentIndex -= 1;
+        await ClearCurrent();
+    }
+
+    public async Task ClearCurrent()
+    {
+        Text = Text.SetItem(CurrentIndex, null);
+        await TextChanged.InvokeAsync(Text);
+    }
+
+    public async Task InputLetter(char c)
+    {
+        if (CurrentIndex >= Settings.WordLength)
+        {
+            CurrentIndex = 0;
+        }
+        
+        Text = Text.SetItem(CurrentIndex, c);
+        CurrentIndex++;
+        if (CurrentIndex >= Settings.WordLength)
+        {
+            CurrentIndex = 0;
+        }
+        await TextChanged.InvokeAsync(Text);
     }
 
     private async Task ChipClicked(int index)
     {
-        if (_textField is not null)
-        {
-            await _textField.FocusAsync();
-            await _textField.SelectRangeAsync(index, index + 1);
-        }
-            
+        CurrentIndex = index;
     }
 
-    private async Task TextChangedFunc(string s)
-    {
-        await TextChanged.InvokeAsync(s);
-        //StateHasChanged();
-    }
+    //private async Task TextChangedFunc(string s)
+    //{
+    //    await TextChanged.InvokeAsync(s);
+    ////StateHasChanged();
+    //}
 
 }
