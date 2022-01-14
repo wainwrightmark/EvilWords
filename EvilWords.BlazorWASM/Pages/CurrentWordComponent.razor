@@ -33,24 +33,55 @@
         const string enterKey = "Enter";
         const string backspaceKey = "Backspace";
         const string deleteKey = "Delete";
+        const string leftKey = "ArrowLeft";
+        const string rightKey = "ArrowRight";
 
-        if (obj.Key.Equals(enterKey))
+        switch (obj.Key)
         {
-            await AddAction();
+            case leftKey:
+                await MoveLeft();
+                break;
+            case rightKey:
+                await MoveRight();
+                break;
+            case enterKey:
+                await AddAction();
+                break;
+            case backspaceKey:
+                await ClearPrevious();
+                break;
+            case deleteKey:
+                await ClearNext();
+                break;
+            default:
+            {
+                if (obj.Key.Length == 1 && char.IsLetter(obj.Key.Single()))
+                {
+                    await InputLetter(char.ToUpperInvariant(obj.Key.Single()));
+                }
+                break;
+            }
         }
-            
-        else if (obj.Key.Equals(backspaceKey))
-        {
-            await ClearPrevious();
-        }
-        else if (obj.Key.Equals(deleteKey))
-        {
-            await ClearNext();
-        }
-        else if (obj.Key.Length == 1 && char.IsLetter(obj.Key.Single()))
-        {
-            await InputLetter(char.ToUpperInvariant(obj.Key.Single()));
-        }
+    }
+
+    public async Task MoveLeft()
+    {
+        CurrentIndex -= 1;
+        NormalizeIndex();
+        await CurrentIndexChanged.InvokeAsync(CurrentIndex);
+    }
+
+    private void NormalizeIndex()
+    {
+        CurrentIndex %= MaxLength;
+        if (CurrentIndex < 0) CurrentIndex += MaxLength;
+    }
+    
+    public async Task MoveRight()
+    {
+        CurrentIndex += 1;
+        NormalizeIndex();
+        await CurrentIndexChanged.InvokeAsync(CurrentIndex);
     }
 
     public async Task ClearPrevious()
@@ -58,6 +89,7 @@
         if (CurrentIndex == 0)
             CurrentIndex += MaxLength;
         CurrentIndex -= 1;
+        NormalizeIndex();
         await CurrentIndexChanged.InvokeAsync(CurrentIndex);
         await ClearCurrent();
     }
@@ -66,7 +98,7 @@
     {
         await ClearCurrent();
         CurrentIndex++;
-        CurrentIndex %= MaxLength;
+        NormalizeIndex();
         await CurrentIndexChanged.InvokeAsync(CurrentIndex);
     }
 
@@ -78,11 +110,9 @@
 
     public async Task InputLetter(char c)
     {
-        CurrentIndex %= MaxLength;
-        
         Text = Text.SetItem(CurrentIndex, c);
         CurrentIndex++;
-        CurrentIndex %= MaxLength;
+        NormalizeIndex();
         await CurrentIndexChanged.InvokeAsync(CurrentIndex);
         await TextChanged.InvokeAsync(Text);
     }

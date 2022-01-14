@@ -28,15 +28,15 @@
                 }
                 else
                 {
-                    c = BlankChar; //Special blank character
-                    color = Color.Dark;
-                    variant = Variant.Outlined;
+                    c = ' '; 
+                    color = Color.Surface;
+                    variant = Variant.Filled;
                 }
                 <MudChip
                     Color="@color"
                     Variant="@variant"
-                    Label="@(@CurrentWordComponent.CurrentIndex != i)"
-                    Style="margin: 1px"
+                    Label="true"
+                    Style="@(CurrentWordComponent.CurrentIndex == i? "": "opacity:0.75;")"
                     Size="Size" OnClick="() => ChipClicked(i1)">
                     @c
                 </MudChip>
@@ -94,7 +94,6 @@
     [EditorRequired]
     public CurrentWordComponent CurrentWordComponent { get; set; }
     
-    public const char BlankChar = ' ';
 
     private async Task ChipClicked(int index)
     {

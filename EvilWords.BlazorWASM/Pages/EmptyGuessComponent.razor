@@ -1,21 +1,17 @@
 ﻿@for (var charResultIndex = 0; charResultIndex < WordLength; charResultIndex++)
 {
-    
-
     <MudChip
         Color="Color.Dark"
         Variant="Variant.Filled"
-        Label="true" Style="margin: 1px" Size="Size">
-        _
-    </MudChip>
+        Label="true" Size="Size"/>
+    
 }
 
 @code {
     [Parameter]
     [EditorRequired]
     public int WordLength { get; set; }
-
-        public const char BlankChar = ' ';
+    
 
     [Parameter]
     [EditorRequired]
