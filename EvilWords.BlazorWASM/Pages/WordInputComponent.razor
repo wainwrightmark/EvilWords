@@ -1,0 +1,119 @@
+﻿<MudButtonGroup>
+
+    @for (var i = 0; i < Settings.WordLength; i++)
+    {
+        var i1 = i;
+        char c;
+        Variant variant;
+        Color color;
+        if (Text.Length == 0 && Placeholder.Length > i)
+        {
+            c = Placeholder[i];
+            variant = Variant.Text;
+            color = GetColorFunc(i1, c);
+        }
+        else if (Text.Length <= i)
+        {
+            c = '⠀'; //Special blank character
+            color = Color.Dark;
+            variant = Variant.Outlined;
+        }
+        else
+        {
+            c = Text[i];
+            color = GetColorFunc(i1, c);
+            variant = Variant.Filled;
+        }
+        <MudChip
+            Color="@color"
+            Variant="@variant"
+            Label="true"
+            Style="margin: 1px"
+            Size="Size" OnClick="() => ChipClicked(i1)">
+            @c
+        </MudChip>
+    }
+
+    <MudTextField
+        @ref="_textField"
+        Value="Text"
+        TextChanged="TextChanged"
+        MaxLength="@Settings.WordLength"
+        HelperText="@HelperText"
+        Placeholder="@Placeholder"
+        InputMode="InputMode.text"
+        InputType="InputType.Text"
+        Immediate="true"
+        Pattern="@Settings.Pattern"
+        Style="opacity: 0.50;"
+        OnKeyPress="OnInputKeyPress"/>
+    <MudIconButton
+        Icon="@Icons.Filled.Add"
+        OnClick="AddAction"
+        Disabled="IsAddDisabled"/>
+</MudButtonGroup>
+
+@code {
+
+    [Parameter]
+    [EditorRequired]
+    public string Text { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public EventCallback<string> TextChanged { get; set; }
+
+    [Parameter]
+    public string HelperText { get; set; }
+
+    [Parameter]
+    public string Placeholder { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public bool IsAddDisabled { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public Func<Task> AddAction { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public GameSettings Settings { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public Size Size { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public Func<int, char, Color> GetColorFunc { get; set; }
+
+    private MudTextField<string> _textField;
+
+    private async Task OnInputKeyPress(KeyboardEventArgs obj)
+    {
+        if (IsAddDisabled) return;
+        const string enterKey = "Enter";
+
+        if (obj.Key.Equals(enterKey))
+            await AddAction();
+    }
+
+    private async Task ChipClicked(int index)
+    {
+        if (_textField is not null)
+        {
+            await _textField.FocusAsync();
+            await _textField.SelectRangeAsync(index, index + 1);
+        }
+            
+    }
+
+    private async Task TextChangedFunc(string s)
+    {
+        await TextChanged.InvokeAsync(s);
+        //StateHasChanged();
+    }
+
+}

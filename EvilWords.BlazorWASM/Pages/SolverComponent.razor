@@ -20,27 +20,24 @@
         
     }
 
-
-    <MudListItem>
-
-        <MudButtonGroup>
-            <MudTextField
-                @bind-Value="UserGuess"
-                MaxLength="@Settings.WordLength"
+    @if (!GameState.IsWin)
+    {
+        <MudListItem>
+            <WordInputComponent
+                Text="@UserGuess"
+                TextChanged="s=> UserGuess=s"
+                Settings="@Settings"
+                IsAddDisabled="!IsGoodGuess()"
+                AddAction="()=>AddGuess()"
                 Placeholder="@(Suggestion?.BestWord ?? "")"
                 HelperText="@(Suggestion?.PossibilityText)"
-                InputMode="InputMode.text"
-                InputType="InputType.Text"
-                Immediate="true"
-                Pattern="@Settings.Pattern"
-                Style="width: fit-content"/>
-            <MudIconButton
-                Icon="@Icons.Filled.Add"
-                OnClick="AddGuess"
-                Disabled="!IsGoodGuess()"/>
-        </MudButtonGroup>
+                Size="Size.Large"
+                GetColorFunc="GetColor"
+            />
 
-    </MudListItem>
+        </MudListItem>
+    }
+    
 
 
 </MudList>
@@ -68,6 +65,11 @@
         await ResetWorker();
 
         StateChanged();
+    }
+
+    public Color GetColor(int index, char c)
+    {
+        return GameState.GetColor(index, c);
     }
 
     private async Task ResetWorker()
@@ -120,7 +122,7 @@
 
     public bool IsGoodGuess() => GetRealGuess() is not null;
 
-    private void AddGuess()
+    private async Task AddGuess()
     {
         var guess = GetRealGuess();
         if (guess is null) return;

@@ -18,6 +18,20 @@ public static class Helpers
         };
     }
 
+    public static Color GetColor(this GameState gameState, int i, char c)
+    {
+        var gro = gameState.MakeGuessResultOptimizer();
+        if (gro is null) return Color.Info;
+
+        var r = gro.GetResultColor(i, c);
+        return r switch
+        {
+            ResultColor.Green => Color.Success,
+            ResultColor.Yellow => Color.Warning,
+            ResultColor.Red => Color.Error,
+            _ => Color.Info
+        };
+    }
     
 }
 

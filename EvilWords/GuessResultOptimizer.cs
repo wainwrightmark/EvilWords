@@ -14,6 +14,22 @@ public record GuessResultOptimizer(int ExpectedLength,
     (char c, int minCount)[] MinMultiplicities,
     int?[] MaxMultiplicities)
 {
+
+    public ResultColor? GetResultColor(int index, char c)
+    {
+        if (!char.IsLetter(c)) return null;
+        c = char.ToUpperInvariant(c);
+
+        if (MaxMultiplicities[c - 'A'] == 0) return ResultColor.Red;
+        if (KnownCharacters.Contains((c, index))) return ResultColor.Green;
+        if (KnownBadCharacterIndexes[c].Contains(index)) return ResultColor.Red;
+
+
+        if (MinMultiplicities.Any(x => x.c == c && x.minCount > 
+            KnownCharacters.Count(k=> k.c == c))) return ResultColor.Yellow;
+        return null;
+    }
+
     /// <summary>
     /// Create an empty GuessResultOptimizer
     /// </summary>
@@ -200,4 +216,6 @@ public record GuessResultOptimizer(int ExpectedLength,
 
         return true;
     }
+
+
 }
