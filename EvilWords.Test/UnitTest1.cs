@@ -111,7 +111,7 @@ public class UnitTest1
         var totalRounds = 0;
         var maxRounds = 0;
 
-        var cache = new ConcurrentDictionary<GameState, string>();
+        var cache = new ConcurrentDictionary<GameState, string?>();
 
         var solveSettings = new SolveSettings(
             seed,

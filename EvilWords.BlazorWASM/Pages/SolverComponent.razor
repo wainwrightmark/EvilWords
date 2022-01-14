@@ -52,10 +52,7 @@
 
     public ImmutableArray<char?> UserGuess;
 
-    private void ResetUserGuess()
-    {
-        UserGuess = Enumerable.Repeat(null as char?, Settings.WordLength).ToImmutableArray();
-    }
+    private void ResetUserGuess() => UserGuess = Enumerable.Repeat(null as char?, Settings.WordLength).ToImmutableArray();
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
@@ -67,10 +64,7 @@
         StateChanged();
     }
 
-    public Color GetColor(int index, char c)
-    {
-        return GameState.GetColor(index, c);
-    }
+    public Color GetColor(int index, char c) => GameState.GetColor(index, c);
 
     private async Task ResetWorker()
     {

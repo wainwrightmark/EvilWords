@@ -1,4 +1,5 @@
 ﻿@using BlafettisLib
+@using System.Collections.Immutable
 @inject Blazored.LocalStorage.ILocalStorageService _localStorage
 
 <MudList>
@@ -40,28 +41,22 @@
     else
     {
         const string inputListItemKey = "inputListItem";
-        <MudListItem @key="inputListItemKey">
-        
-            <MudButtonGroup>
-                <MudTextField
-                    @bind-Value="UserGuess"
-                    MaxLength="@Settings.WordLength"
-                    HelperText="@($"Guess a {Settings.WordLength} letter word.")"
-                    InputMode="InputMode.text"
-                    InputType="InputType.Text"
-                    Immediate="true"
-                    Pattern="@Settings.Pattern"
-                    Style="width:fit-content"
-                    OnKeyPress="OnInputKeyPress"
-                    />
-                <MudIconButton
-                    Icon="@Icons.Filled.Add"
-                    OnClick="AddGuess"
-                    Disabled="!IsGoodGuess()"
-                />
-            </MudButtonGroup>
 
         
+
+        <MudListItem @key="inputListItemKey">
+        
+            <WordInputComponent
+                Text="@UserGuess"
+                TextChanged="s=> UserGuess=s"
+                Settings="@Settings"
+                IsAddDisabled="!IsGoodGuess()"
+                AddAction="()=>AddGuess()"
+                Size="Size.Large"
+                GetColorFunc="GetColor"
+                
+                />
+
         </MudListItem>
 
         <MudListItem>
@@ -130,7 +125,10 @@
             if(!IsEvil)
                 _hiddenWord = Settings.GetRandomHiddenWord(_gameState.MakeGuessResultOptimizer(), Random, false);
 
-            UserGuess = Settings.GetRandomHiddenWord(null, Random, true);
+            UserGuess = Settings.GetRandomHiddenWord(null, Random, true)
+                .Select(x=> x as char?)
+                .ToImmutableArray();
+
             await AddGuess();
         }
     }
@@ -151,15 +149,12 @@
 
     public bool IsGameOver => GameState.IsWin || GameState.PreviousGuesses.Count >= Settings.MaxRounds;
 
-    private string _userGuess = "";
+    public Color GetColor(int index, char c) => GameState.GetColor(index, c);
+    
+    public ImmutableArray<char?> UserGuess { get; set; }
 
-    public string UserGuess
-    {
-        get => _userGuess;
-        set => _userGuess = value.ToUpperInvariant();
-    }
-    
-    
+    private void ResetUserGuess() => UserGuess = Enumerable.Repeat(null as char?, Settings.WordLength).ToImmutableArray();
+
     public Random Random = new();
 #pragma warning disable CS8618
     protected Blafettis Blafettis;
@@ -170,7 +165,7 @@
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
-
+        ResetUserGuess();
         await GetGameStateFromLocalStorage();
         await GetHistoryFromLocalStorage();
     }
@@ -197,7 +192,7 @@
             await SetHistory(History.Add(gameResult));
         }
 
-        UserGuess = hiddenWord; //The first guess of the next game is the previous hidden word
+        UserGuess = hiddenWord.Select(x=> x as char?).ToImmutableArray(); //The first guess of the next game is the previous hidden word
         var newHiddenWord = IsEvil?
             "" :
             Settings.GetRandomHiddenWord(null, Random, false);
@@ -209,9 +204,10 @@
 
     public string? GetRealGuess()
     {
-        var guess = UserGuess;
+        if (UserGuess.Any(x => !x.HasValue)) return null;
 
-        guess = new string(guess.Trim().ToUpperInvariant().Where(char.IsLetter).ToArray());
+        var guess  = new string(UserGuess.Select(x=>x.Value)
+            .Where(char.IsLetter) .ToArray()).Trim().ToUpperInvariant();
 
         if(guess.Length != Settings.WordLength || !Settings.PossibleGuesses.Contains(guess))
             return null;
@@ -233,7 +229,7 @@
         ;
         
         await SetGameState(GameState.Add(newGuessResult), _hiddenWord);
-        UserGuess = "";
+        ResetUserGuess();
 
         if (GameState.IsWin)
         {
@@ -249,6 +245,7 @@
             var gameResult = new GameResult(null, hiddenWord);
             await SetHistory(History.Add(gameResult));
         }
+        StateHasChanged();
     }
 
     private async Task OnInputKeyPress(KeyboardEventArgs obj)

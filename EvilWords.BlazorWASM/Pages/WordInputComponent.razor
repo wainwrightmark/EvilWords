@@ -1,5 +1,5 @@
 ﻿@using System.Collections.Immutable
-<div class="mud-input-control mud-input-input-control" @onkeypress="OnInputKeyPress">
+<div class="mud-input-control mud-input-input-control" @onkeydown="OnKeyDown">
     <MudButtonGroup>
 
         @for (var i = 0; i < Settings.WordLength; i++)
@@ -10,7 +10,7 @@
             Color color;
             var val = Text[i];
 
-            if (Placeholder.Length > i && Text.All(x => !x.HasValue))
+            if (Placeholder?.Length > i && Text.All(x => !x.HasValue))
             {
                 c = Placeholder[i];
                 variant = Variant.Text;
@@ -37,20 +37,6 @@
                 @c
             </MudChip>
         }
-
-        @*<MudTextField
-            @ref="_textField"
-            Value="Text"
-            TextChanged="TextChanged"
-            MaxLength="@Settings.WordLength"
-            HelperText="@HelperText"
-            Placeholder="@Placeholder"
-            InputMode="InputMode.text"
-            InputType="InputType.Text"
-            Immediate="true"
-            Pattern="@Settings.Pattern"
-            Style="opacity: 0.50;"
-            OnKeyPress="OnInputKeyPress"/>*@
         <MudIconButton
             Icon="@Icons.Filled.Add"
             OnClick="AddAction"
@@ -83,10 +69,10 @@
     public EventCallback<ImmutableArray<char?>> TextChanged { get; set; }
 
     [Parameter]
-    public string HelperText { get; set; }
+    public string? HelperText { get; set; }
 
     [Parameter]
-    public string Placeholder { get; set; }
+    public string? Placeholder { get; set; }
 
     [Parameter]
     [EditorRequired]
@@ -113,7 +99,7 @@
 
     //private MudTextField<string> _textField;
 
-    private async Task OnInputKeyPress(KeyboardEventArgs obj)
+    private async Task OnKeyDown(KeyboardEventArgs obj)
     {
         const string enterKey = "Enter";
         const string backspaceKey = "Backspace";
@@ -131,7 +117,7 @@
         }
         else if (obj.Key.Equals(deleteKey))
         {
-            await ClearCurrent();
+            await ClearNext();
         }
         else if (obj.Key.Length == 1 && char.IsLetter(obj.Key.Single()))
         {
@@ -147,6 +133,13 @@
         await ClearCurrent();
     }
 
+    public async Task ClearNext()
+    {
+        await ClearCurrent();
+        CurrentIndex++;
+        CurrentIndex %= Settings.WordLength;
+    }
+
     public async Task ClearCurrent()
     {
         Text = Text.SetItem(CurrentIndex, null);
@@ -155,29 +148,17 @@
 
     public async Task InputLetter(char c)
     {
-        if (CurrentIndex >= Settings.WordLength)
-        {
-            CurrentIndex = 0;
-        }
+        CurrentIndex %= Settings.WordLength;
         
         Text = Text.SetItem(CurrentIndex, c);
         CurrentIndex++;
-        if (CurrentIndex >= Settings.WordLength)
-        {
-            CurrentIndex = 0;
-        }
+        CurrentIndex %= Settings.WordLength;
         await TextChanged.InvokeAsync(Text);
     }
 
-    private async Task ChipClicked(int index)
+    private void ChipClicked(int index)
     {
         CurrentIndex = index;
     }
-
-    //private async Task TextChangedFunc(string s)
-    //{
-    //    await TextChanged.InvokeAsync(s);
-    ////StateHasChanged();
-    //}
 
 }
