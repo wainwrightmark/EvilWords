@@ -2,6 +2,7 @@
 using System.Diagnostics.Contracts;
 using Generator.Equals;
 using MudBlazor;
+using MudBlazor.Extensions;
 
 namespace EvilWords.BlazorWASM.Pages;
 
@@ -14,13 +15,24 @@ public static class Helpers
             ResultColor.Green => Color.Success,
             ResultColor.Yellow => Color.Warning,
             ResultColor.Red => Color.Error,
+            ResultColor.Blue => Color.Info,
             _ => throw new ArgumentOutOfRangeException(nameof(resultColor), resultColor, null)
         };
     }
 
-    public static Color GetColor(this GameState gameState, int i, char c)
+    public static GuessResult GetFakeGuessResult(this GuessResultOptimizer? gro, string word)
     {
-        var gro = gameState.MakeGuessResultOptimizer();
+        if (gro is null)
+            return new GuessResult(word.Select(c => new CharResult(c, ResultColor.Yellow)).ToImmutableArray());
+
+        return new GuessResult(word.Select((c, i) =>
+
+            new CharResult(c, gro.GetResultColor(i, c) ?? ResultColor.Blue)
+        ).ToImmutableArray());
+    }
+
+    public static Color GetColor(this GuessResultOptimizer? gro, int i, char c)
+    {
         if (gro is null) return Color.Info;
 
         var r = gro.GetResultColor(i, c);
@@ -29,6 +41,7 @@ public static class Helpers
             ResultColor.Green => Color.Success,
             ResultColor.Yellow => Color.Warning,
             ResultColor.Red => Color.Error,
+            ResultColor.Blue => Color.Info,
             _ => Color.Info
         };
     }

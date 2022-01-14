@@ -4,101 +4,108 @@
 
 <CurrentWordComponent @ref="_currentWordComponent"
                       Text="@UserGuess"
-                      TextChanged="s=> UserGuess=s"
+                      TextChanged="s => UserGuess = s"
                       AddAction="@AddGuess"
                       CurrentIndex="@SelectedIndex"
-                      CurrentIndexChanged="i => SelectedIndex=i"
-                      MaxLength="Settings.WordLength"
+                      CurrentIndexChanged="i => SelectedIndex = i"
+                      MaxLength="Settings.WordLength"/>
 
-/>
-
-<MudList Dense="true">
-    @foreach (var guessResult in GameState.PreviousGuesses)
-    {
-        <MudListItem >
-            <GuessComponent Size="Size.Large" GuessResult="guessResult" />
-
-        </MudListItem>
-    }
-    
-    @for (var i = GameState.PreviousGuesses.Count + 1; i <= Settings.MaxRounds; i++)
-    {
-        <MudListItem>
-            <EmptyGuessComponent Size="Size.Large" WordLength="@Settings.WordLength" />
-        </MudListItem>
-    }
-
-    @if (IsGameOver)
-    {
-        <MudListItem>
-            @if (GameState.IsWin)
+<MudPaper>
+    <MudContainer Fixed="false" MaxWidth="MaxWidth.ExtraSmall">
+        <MudList Dense="true">
+            @foreach (var guessResult in GameState.PreviousGuesses)
             {
-                <MudText Typo="Typo.h6">You are victorious!</MudText>
+                <MudListItem >
+                    <GuessComponent Size="Size.Large" GuessResult="guessResult"/>
+
+                </MudListItem>
             }
-            else if(History.Results.Any())
+
+            @for (var i = GameState.PreviousGuesses.Count + 1; i <= Settings.MaxRounds; i++)
             {
-                <MudText Typo="Typo.h6">Sorry, honey, the word was</MudText>
-                <MudText Typo="Typo.h2">@History.Results.Last().HiddenWord</MudText>
+                <MudListItem>
+                    <EmptyGuessComponent Size="Size.Large" WordLength="@Settings.WordLength"/>
+                </MudListItem>
             }
-        </MudListItem>
+            
+            <Blafettis @ref="Blafettis" duration="8000" elementCount="150"/>
+            @if (IsGameOver)
+            {
+                <MudListItem>
+                    @if (GameState.IsWin)
+                    {
+                        <MudText Typo="Typo.h6">You are victorious!</MudText>
+                    }
+                    else if (History.Results.Any())
+                    {
+                        <MudText Typo="Typo.h6">Sorry, honey, the word was</MudText>
+                        <GuessComponent Size="Size.Large" GuessResult="@_guessResultOptimizer.GetFakeGuessResult(@History.Results.Last().HiddenWord)">
 
-        <MudListItem>
-            <MudButton OnClick="Restart">New Game</MudButton>
-        </MudListItem>
+                        </GuessComponent>
+                    }
+                </MudListItem>
 
-        <MudListItem>
-            <ChartComponent History="History" />
-        </MudListItem>
-    }
-    else
-    {
-        const string inputListItemKey = "inputListItem";
+                <MudListItem>
+                    <MudButton OnClick="Restart">New Game</MudButton>
+                </MudListItem>
 
-        
+                <MudListItem>
+                    <ChartComponent History="History"/>
+                </MudListItem>
+            }
+            else
+            {
+                const string inputListItemKey = "inputListItem";
 
-        <MudListItem @key="inputListItemKey">
-        
-            <WordInputComponent
-                CurrentWordComponent ="@_currentWordComponent"
-                Settings="@Settings"
-                IsAddDisabled="!IsGoodGuess()"
-                Size="Size.Large"
-                GetColorFunc="GetColor"
-                HelperText="@($"Type a {Settings.WordLength} letter word")"
-                />
+                <MudListItem @key="inputListItemKey">
 
-        </MudListItem>
+                    <WordInputComponent
+                        CurrentWordComponent="@_currentWordComponent"
+                        Settings="@Settings"
+                        IsAddDisabled="!IsGoodGuess()"
+                        Size="Size.Large"
+                        GetColorFunc="GetColor"
+                        HelperText="@($"Type a {Settings.WordLength} letter word")"/>
 
-        <MudListItem>
-            <MudButton OnClick="Restart">Restart</MudButton>
-        </MudListItem>
-    }
-    
-    
+                </MudListItem>
 
-</MudList>
-<Blafettis @ref="Blafettis" duration="8000" elementCount="150" />
+                <KeyboardComponent CurrentWordComponent="@_currentWordComponent" GuessResultOptimizer="@_guessResultOptimizer"/>
+            }
+
+        </MudList>
+    </MudContainer>
+</MudPaper>
+
 
 @code{
 
-
+    public CurrentWordComponent _currentWordComponent;
     public RunHistory History => _history;
-    public GameState GameState => _gameState;
+    private GameState _gameState = GameState.Empty;
+    private GuessResultOptimizer? _guessResultOptimizer;
+
+    public GameState GameState
+    {
+        get => _gameState;
+        set
+        {
+            _gameState = value;
+            _guessResultOptimizer = _gameState.MakeGuessResultOptimizer();
+        }
+    }
 
     private RunHistory _history = RunHistory.Empty;
-    private GameState _gameState = GameState.Empty;
 
-    public CurrentWordComponent _currentWordComponent;
 
     [Parameter]
     [EditorRequired]
     public bool IsEvil { get; set; }
 
-    private string RunHistoryKey => (IsEvil? "Evil": "Nice") +Settings.WordLength + "RunHistory";
-        
-    private string GameStateKey => (IsEvil? "Evil": "Nice") +Settings.WordLength + "GameState";
+    private string RunHistoryKey => (IsEvil ? "Evil" : "Nice") + Settings.WordLength + "RunHistory";
 
-    private string HiddenWordKey => (IsEvil? "Evil": "Nice") +Settings.WordLength + "HiddenWord";
+    private string GameStateKey => (IsEvil ? "Evil" : "Nice") + Settings.WordLength + "GameState";
+
+    private string HiddenWordKey => (IsEvil ? "Evil" : "Nice") + Settings.WordLength + "HiddenWord";
 
     private string _hiddenWord = "";
 
@@ -107,11 +114,11 @@
         await _localStorage.SetItemAsync(RunHistoryKey, runHistory);
         _history = runHistory;
     }
-    
+
     private async Task SetGameState(GameState gameState, string hw)
     {
         await _localStorage.SetItemAsStringAsync(GameStateKey, gameState.Serialize());
-        _gameState = gameState;
+        GameState = gameState;
 
         if (!IsEvil)
         {
@@ -126,20 +133,20 @@
 
         if (serialized is not null)
         {
-            _gameState = GameStateSerialization.Deserialize(serialized);
+            GameState = GameStateSerialization.Deserialize(serialized);
             var hw = await _localStorage.GetItemAsStringAsync(HiddenWordKey);
             _hiddenWord = hw;
         }
-            
+
         else //Set initial game state
         {
-            _gameState = GameState.Empty;
+            GameState = GameState.Empty;
 
-            if(!IsEvil)
-                _hiddenWord = Settings.GetRandomHiddenWord(_gameState.MakeGuessResultOptimizer(), Random, false);
+            if (!IsEvil)
+                _hiddenWord = Settings.GetRandomHiddenWord(_guessResultOptimizer, Random, false);
 
             UserGuess = Settings.GetRandomHiddenWord(null, Random, true)
-                .Select(x=> x as char?)
+                .Select(x => x as char?)
                 .ToImmutableArray();
 
             await AddGuess();
@@ -162,13 +169,17 @@
 
     public bool IsGameOver => GameState.IsWin || GameState.PreviousGuesses.Count >= Settings.MaxRounds;
 
-    public Color GetColor(int index, char c) => GameState.GetColor(index, c);
-    
+    public Color GetColor(int index, char c) => _guessResultOptimizer.GetColor(index, c);
+
     public ImmutableArray<char?> UserGuess { get; set; }
 
     public int SelectedIndex;
 
-    private void ResetUserGuess() => UserGuess = Enumerable.Repeat(null as char?, Settings.WordLength).ToImmutableArray();
+    private void ResetUserGuess()
+    {
+        SelectedIndex = 0;
+        UserGuess = Enumerable.Repeat(null as char?, Settings.WordLength).ToImmutableArray();
+    }
 
     public Random Random = new();
 #pragma warning disable CS8618
@@ -184,22 +195,21 @@
         await GetGameStateFromLocalStorage();
         await GetHistoryFromLocalStorage();
     }
-    
+
 
     public async Task Restart()
     {
         string hiddenWord;
         if (IsEvil)
         {
-            var gro = GameState.MakeGuessResultOptimizer();
-            hiddenWord = Settings.GetRandomHiddenWord(gro, Random, true);
+            hiddenWord = Settings.GetRandomHiddenWord(_guessResultOptimizer, Random, true);
         }
         else
         {
             hiddenWord = _hiddenWord;
         }
 
-        
+
         if (!IsGameOver)
         {
             var guessCount = GameState.IsWin ? GameState.PreviousGuesses.Count : null as int?;
@@ -207,11 +217,11 @@
             await SetHistory(History.Add(gameResult));
         }
 
-        UserGuess = hiddenWord.Select(x=> x as char?).ToImmutableArray(); //The first guess of the next game is the previous hidden word
-        var newHiddenWord = IsEvil?
+        UserGuess = hiddenWord.Select(x => x as char?).ToImmutableArray(); //The first guess of the next game is the previous hidden word
+        var newHiddenWord = IsEvil ?
             "" :
             Settings.GetRandomHiddenWord(null, Random, false);
-        
+
         await SetGameState(GameState.Empty, newHiddenWord);
         await AddGuess();
     }
@@ -221,10 +231,10 @@
     {
         if (UserGuess.Any(x => !x.HasValue)) return null;
 
-        var guess  = new string(UserGuess.Select(x=>x.Value)
-            .Where(char.IsLetter) .ToArray()).Trim().ToUpperInvariant();
+        var guess = new string(UserGuess.Select(x => x.Value)
+            .Where(char.IsLetter).ToArray()).Trim().ToUpperInvariant();
 
-        if(guess.Length != Settings.WordLength || !Settings.PossibleGuesses.Contains(guess))
+        if (guess.Length != Settings.WordLength || !Settings.PossibleGuesses.Contains(guess))
             return null;
 
         return guess;
@@ -238,11 +248,11 @@
         if (guess is null) return;
 
         var newGuessResult =
-            IsEvil?
-            GuessResult.GetWorstCase(guess, GameState, Settings):
-            GuessResult.ScoreWord(_hiddenWord, guess)
-        ;
-        
+            IsEvil ?
+                GuessResult.GetWorstCase(guess, GameState, Settings) :
+                GuessResult.ScoreWord(_hiddenWord, guess)
+            ;
+
         await SetGameState(GameState.Add(newGuessResult), _hiddenWord);
         ResetUserGuess();
 
@@ -250,13 +260,12 @@
         {
             var gameResult = new GameResult(GameState.PreviousGuesses.Count, guess);
             await SetHistory(History.Add(gameResult));
-            Blafettis.RaiseConfetti();  // raise confetti via method
+            Blafettis.RaiseConfetti(); // raise confetti via method
         }
 
         if (GameState.PreviousGuesses.Count >= Settings.MaxRounds)
         {
-            var gro = GameState.MakeGuessResultOptimizer();
-            var hiddenWord = Settings.GetRandomHiddenWord(gro, Random, true);
+            var hiddenWord = Settings.GetRandomHiddenWord(_guessResultOptimizer, Random, true);
             var gameResult = new GameResult(null, hiddenWord);
             await SetHistory(History.Add(gameResult));
         }

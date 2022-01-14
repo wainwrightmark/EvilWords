@@ -2,6 +2,11 @@
 
 public enum ResultColor
 {
+    
+    /// <summary>
+    /// Unknown
+    /// </summary>
+    Blue, 
     /// <summary>
     /// Character appears in position
     /// </summary>
@@ -15,5 +20,6 @@ public enum ResultColor
     /// <summary>
     /// Character does not appear
     /// </summary>
-    Red
+    Red,
+
 }

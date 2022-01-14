@@ -71,9 +71,9 @@
         await CurrentIndexChanged.InvokeAsync(CurrentIndex);
     }
 
-    private void NormalizeIndex()
+    private void NormalizeIndex() //makes sure the index is within the bounds
     {
-        CurrentIndex %= MaxLength;
+        CurrentIndex = Math.Min(CurrentIndex, MaxLength - 1);
         if (CurrentIndex < 0) CurrentIndex += MaxLength;
     }
     

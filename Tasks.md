@@ -6,8 +6,8 @@
 - [x] Local Storage
 - [x] "Nice Words"
 - [ ] Other Game Sizes
-- [ ] Way of showing available letters
-- [ ] Letter coloring in input box
+- [x] Way of showing available letters
+- [x] Letter coloring in input box
 - [x] Confetti
 - [x] Hidden word is first guess next time
 - [x] Hidden word is an insult :)

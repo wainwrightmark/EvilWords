@@ -9,6 +9,7 @@ public readonly record struct CharResult(char Character, ResultColor ResultColor
             'R' => ResultColor.Red,
             'G' => ResultColor.Green,
             'Y' => ResultColor.Yellow,
+            'B' => ResultColor.Blue,
             _ => throw new Exception(colorChar + " is not a color")
         };
         return new CharResult(c, rc);

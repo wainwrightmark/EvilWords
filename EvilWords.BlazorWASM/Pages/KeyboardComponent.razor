@@ -1,0 +1,66 @@
+﻿@if (@CurrentWordComponent is not null)
+{
+    <MudGrid Spacing="1" Justify="Justify.Center" @onkeydown="kea=> CurrentWordComponent.OnKeyDown(kea)">
+        @for (var rowNumber = 0; rowNumber < KeysRows.Count; rowNumber++)
+        {
+            var rn = rowNumber;
+            var row = KeysRows[rowNumber];
+            if (rowNumber == 1)
+            {
+                <MudItem xs="1"/>
+            }
+            else if (rowNumber == 2)
+            {
+                <MudItem xs="1"/>
+                <MudItem xs="1">
+                    <MudChip Size="Size.Small" Label="true" Icon="@Icons.Filled.KeyboardBackspace" Color="Color.Info" OnClick="@CurrentWordComponent.ClearPrevious"/>
+                </MudItem>
+            }
+
+            @foreach (var c in row)
+            {
+                var color = Helpers.GetColor(GuessResultOptimizer, CurrentWordComponent.CurrentIndex, c);
+                <MudItem xs="1">
+                    <MudChip
+                        Color="@color"
+                        Variant="@Variant.Filled"
+                        Label="true"
+                        Size="Size.Small" OnClick="() => CurrentWordComponent.InputLetter(c)">
+                        @c
+                    </MudChip>
+                </MudItem>
+            }
+
+            if (rowNumber is 0 or 1)
+            {
+                <MudItem xs="2"/>
+            }
+            else
+            {
+                <MudItem xs="1">
+                    <MudChip Size="Size.Small" Label="true" Icon="@Icons.Filled.KeyboardReturn" Color="Color.Info" OnClick="@CurrentWordComponent.AddAction"/>
+                </MudItem>
+                <MudItem xs="2"/>
+            }
+        }
+    </MudGrid>
+}
+
+@code {
+
+    [Parameter]
+    [EditorRequired]
+    public CurrentWordComponent CurrentWordComponent { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public GuessResultOptimizer? GuessResultOptimizer { get; set; }
+
+    public List<string> KeysRows = new List<string>()
+    {
+        "QWERTYUIOP",
+        "ASDFGHJKL",
+        "ZXCVBNM"
+    };
+
+}

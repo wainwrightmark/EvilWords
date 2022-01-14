@@ -1,6 +1,10 @@
 ﻿
-.mud-chip-content {
-    width: 1rem;
+.mud-chip-size-small {
+    width: 7.5%;
+}
+
+.mud-chip-size-large {
+    width: 15%;
 }
 
 .mud-chip {

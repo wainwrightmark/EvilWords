@@ -6,65 +6,80 @@
 @implements IDisposable;
 @inject IWorkerFactory _workerFactory
 
-<CurrentWordComponent @ref="_currentWordComponent"
-                      Text="@UserGuess"
-                      TextChanged="s=> UserGuess=s"
-                      AddAction="@AddGuess"
-                      CurrentIndex="@SelectedIndex"
-                      CurrentIndexChanged="i => SelectedIndex=i"
-                      MaxLength="Settings.WordLength"
 
-/>
+<MudPaper>
+    <MudContainer Fixed="false" MaxWidth="MaxWidth.ExtraSmall">
+        <MudList>
+            @for (var guessResultIndex = 0; guessResultIndex < GameState.PreviousGuesses.Count; guessResultIndex++)
+            {
+                var guessResult = GameState.PreviousGuesses[guessResultIndex];
+                var gri = guessResultIndex;
 
-<MudList>
-    @for (var guessResultIndex = 0; guessResultIndex < GameState.PreviousGuesses.Count; guessResultIndex++)
-    {
-        var guessResult = GameState.PreviousGuesses[guessResultIndex];
-        var gri = guessResultIndex;
+                <MudListItem>
+                    <GuessComponent Size="Size.Large" GuessResult="guessResult" ClickAction="cri => CycleResult(gri, cri)"/>
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="() => RemoveGuesses(gri)"/>
+                </MudListItem>
+            }
 
-        <MudListItem>
-            <GuessComponent Size="Size.Large" GuessResult="guessResult" ClickAction="cri => CycleResult(gri,cri)"/>
-            <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="() => RemoveGuesses(gri)"/>
-        </MudListItem>
+            @if (!GameState.IsWin)
+            {
+                <MudListItem>
+                    <WordInputComponent
+                        CurrentWordComponent="@_currentWordComponent"
+                        Settings="@Settings"
+                        IsAddDisabled="!IsGoodGuess()"
+                        Placeholder="@(Suggestion?.BestWord ?? "")"
+                        HelperText="@(Suggestion?.PossibilityText)"
+                        Size="Size.Large"
+                        GetColorFunc="GetColor"/>
 
-        
-    }
+                </MudListItem>
+            }
 
-    @if (!GameState.IsWin)
-    {
-        <MudListItem>
-            <WordInputComponent
-                CurrentWordComponent ="@_currentWordComponent"
-                Settings="@Settings"
-                IsAddDisabled="!IsGoodGuess()"
-                Placeholder="@(Suggestion?.BestWord ?? "")"
-                HelperText="@(Suggestion?.PossibilityText)"
-                Size="Size.Large"
-                GetColorFunc="GetColor"
-            />
+        </MudList>
+        <CurrentWordComponent @ref="_currentWordComponent"
+                              Text="@UserGuess"
+                              TextChanged="s => UserGuess = s"
+                              AddAction="@AddGuess"
+                              CurrentIndex="@SelectedIndex"
+                              CurrentIndexChanged="i => SelectedIndex = i"
+                              MaxLength="Settings.WordLength"/>
+        <KeyboardComponent GuessResultOptimizer="@_guessResultOptimizer" CurrentWordComponent="_currentWordComponent"/>
 
-        </MudListItem>
-    }
-    
-
-
-</MudList>
+    </MudContainer>
+</MudPaper>
 
 
 @code{
-    public GameState GameState { get; set; } = new(ImmutableArray<GuessResult>.Empty);
+    private GameState _gameState = new(ImmutableArray<GuessResult>.Empty);
+
+    public GameState GameState
+    {
+        get => _gameState;
+        set
+        {
+            _gameState = value;
+            _guessResultOptimizer = _gameState.MakeGuessResultOptimizer();
+        }
+    }
+
+    private GuessResultOptimizer? _guessResultOptimizer;
 
     public GameSettings Settings { get; } = GameSettings.FiveLetter;
 
     public CurrentWordComponent _currentWordComponent;
-    
+
     private (IWorker Worker, IWorkerBackgroundService<SolverService> Service)? Worker { get; set; }
 
     public ImmutableArray<char?> UserGuess;
 
     public int SelectedIndex;
 
-    private void ResetUserGuess() => UserGuess = Enumerable.Repeat(null as char?, Settings.WordLength).ToImmutableArray();
+    private void ResetUserGuess()
+    {
+        SelectedIndex = 0;
+        UserGuess = Enumerable.Repeat(null as char?, Settings.WordLength).ToImmutableArray();
+    }
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
@@ -76,7 +91,7 @@
         StateChanged();
     }
 
-    public Color GetColor(int index, char c) => GameState.GetColor(index, c);
+    public Color GetColor(int index, char c) => _guessResultOptimizer.GetColor(index, c);
 
     private async Task ResetWorker()
     {
@@ -192,11 +207,10 @@
         _cancellationTokenSource = newCts;
         Suggestion = null;
         StateHasChanged();
-        
+
         var serializedGameState = GameState.Serialize();
 
-        var gro = GameState.MakeGuessResultOptimizer();
-        var possibilities = Settings.FilterHiddenWords(gro);
+        var possibilities = Settings.FilterHiddenWords(_guessResultOptimizer);
         string? bestGuess;
 
         if (possibilities.Count <= 0)
@@ -211,7 +225,7 @@
             Suggestion = new SuggestionData(Suggestion?.BestWord ?? "", possibilities);
             StateHasChanged();
 
-            if(Worker is null)return;
+            if (Worker is null) return;
 
             try
             {
