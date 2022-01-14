@@ -2,20 +2,32 @@
 @using System.Collections.Immutable
 @inject Blazored.LocalStorage.ILocalStorageService _localStorage
 
-<MudList>
-    @for (var guessResultIndex = 0; guessResultIndex < GameState.PreviousGuesses.Count; guessResultIndex++)
-    {
-        var guessResult = GameState.PreviousGuesses[guessResultIndex];
+<CurrentWordComponent @ref="_currentWordComponent"
+                      Text="@UserGuess"
+                      TextChanged="s=> UserGuess=s"
+                      AddAction="@AddGuess"
+                      CurrentIndex="@SelectedIndex"
+                      CurrentIndexChanged="i => SelectedIndex=i"
+                      MaxLength="Settings.WordLength"
 
+/>
+
+<MudList Dense="true">
+    @foreach (var guessResult in GameState.PreviousGuesses)
+    {
         <MudListItem >
-            
-            <MudListItem>
-                <GuessComponent Size="Size.Large" GuessResult="guessResult" />
-            </MudListItem>
+            <GuessComponent Size="Size.Large" GuessResult="guessResult" />
 
         </MudListItem>
     }
     
+    @for (var i = GameState.PreviousGuesses.Count + 1; i <= Settings.MaxRounds; i++)
+    {
+        <MudListItem>
+            <EmptyGuessComponent Size="Size.Large" WordLength="@Settings.WordLength" />
+        </MudListItem>
+    }
+
     @if (IsGameOver)
     {
         <MudListItem>
@@ -47,14 +59,12 @@
         <MudListItem @key="inputListItemKey">
         
             <WordInputComponent
-                Text="@UserGuess"
-                TextChanged="s=> UserGuess=s"
+                CurrentWordComponent ="@_currentWordComponent"
                 Settings="@Settings"
                 IsAddDisabled="!IsGoodGuess()"
-                AddAction="()=>AddGuess()"
                 Size="Size.Large"
                 GetColorFunc="GetColor"
-                
+                HelperText="@($"Type a {Settings.WordLength} letter word")"
                 />
 
         </MudListItem>
@@ -63,6 +73,7 @@
             <MudButton OnClick="Restart">Restart</MudButton>
         </MudListItem>
     }
+    
     
 
 </MudList>
@@ -76,6 +87,8 @@
 
     private RunHistory _history = RunHistory.Empty;
     private GameState _gameState = GameState.Empty;
+
+    public CurrentWordComponent _currentWordComponent;
 
     [Parameter]
     [EditorRequired]
@@ -152,6 +165,8 @@
     public Color GetColor(int index, char c) => GameState.GetColor(index, c);
     
     public ImmutableArray<char?> UserGuess { get; set; }
+
+    public int SelectedIndex;
 
     private void ResetUserGuess() => UserGuess = Enumerable.Repeat(null as char?, Settings.WordLength).ToImmutableArray();
 

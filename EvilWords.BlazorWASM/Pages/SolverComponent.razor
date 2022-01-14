@@ -6,6 +6,16 @@
 @implements IDisposable;
 @inject IWorkerFactory _workerFactory
 
+<CurrentWordComponent @ref="_currentWordComponent"
+                      Text="@UserGuess"
+                      TextChanged="s=> UserGuess=s"
+                      AddAction="@AddGuess"
+                      CurrentIndex="@SelectedIndex"
+                      CurrentIndexChanged="i => SelectedIndex=i"
+                      MaxLength="Settings.WordLength"
+
+/>
+
 <MudList>
     @for (var guessResultIndex = 0; guessResultIndex < GameState.PreviousGuesses.Count; guessResultIndex++)
     {
@@ -24,11 +34,9 @@
     {
         <MudListItem>
             <WordInputComponent
-                Text="@UserGuess"
-                TextChanged="s=> UserGuess=s"
+                CurrentWordComponent ="@_currentWordComponent"
                 Settings="@Settings"
                 IsAddDisabled="!IsGoodGuess()"
-                AddAction="()=>AddGuess()"
                 Placeholder="@(Suggestion?.BestWord ?? "")"
                 HelperText="@(Suggestion?.PossibilityText)"
                 Size="Size.Large"
@@ -47,10 +55,14 @@
     public GameState GameState { get; set; } = new(ImmutableArray<GuessResult>.Empty);
 
     public GameSettings Settings { get; } = GameSettings.FiveLetter;
+
+    public CurrentWordComponent _currentWordComponent;
     
     private (IWorker Worker, IWorkerBackgroundService<SolverService> Service)? Worker { get; set; }
 
     public ImmutableArray<char?> UserGuess;
+
+    public int SelectedIndex;
 
     private void ResetUserGuess() => UserGuess = Enumerable.Repeat(null as char?, Settings.WordLength).ToImmutableArray();
 

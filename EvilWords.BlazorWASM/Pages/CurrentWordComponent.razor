@@ -1,0 +1,95 @@
+﻿@using System.Collections.Immutable
+
+@code {
+
+    [Parameter]
+    [EditorRequired]
+    public ImmutableArray<char?> Text { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public EventCallback<ImmutableArray<char?>> TextChanged { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public int CurrentIndex { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public EventCallback<int> CurrentIndexChanged { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public int MaxLength { get; set; }
+    
+
+    [Parameter]
+    [EditorRequired]
+    public Func<Task> AddAction { get; set; }
+
+
+    public async Task OnKeyDown(KeyboardEventArgs obj)
+    {
+        const string enterKey = "Enter";
+        const string backspaceKey = "Backspace";
+        const string deleteKey = "Delete";
+
+        if (obj.Key.Equals(enterKey))
+        {
+            await AddAction();
+        }
+            
+        else if (obj.Key.Equals(backspaceKey))
+        {
+            await ClearPrevious();
+        }
+        else if (obj.Key.Equals(deleteKey))
+        {
+            await ClearNext();
+        }
+        else if (obj.Key.Length == 1 && char.IsLetter(obj.Key.Single()))
+        {
+            await InputLetter(char.ToUpperInvariant(obj.Key.Single()));
+        }
+    }
+
+    public async Task ClearPrevious()
+    {
+        if (CurrentIndex == 0)
+            CurrentIndex += MaxLength;
+        CurrentIndex -= 1;
+        await CurrentIndexChanged.InvokeAsync(CurrentIndex);
+        await ClearCurrent();
+    }
+
+    public async Task ClearNext()
+    {
+        await ClearCurrent();
+        CurrentIndex++;
+        CurrentIndex %= MaxLength;
+        await CurrentIndexChanged.InvokeAsync(CurrentIndex);
+    }
+
+    public async Task ClearCurrent()
+    {
+        Text = Text.SetItem(CurrentIndex, null);
+        await TextChanged.InvokeAsync(Text);
+    }
+
+    public async Task InputLetter(char c)
+    {
+        CurrentIndex %= MaxLength;
+        
+        Text = Text.SetItem(CurrentIndex, c);
+        CurrentIndex++;
+        CurrentIndex %= MaxLength;
+        await CurrentIndexChanged.InvokeAsync(CurrentIndex);
+        await TextChanged.InvokeAsync(Text);
+    }
+
+    public async Task ChangeIndex(int index)
+    {
+        CurrentIndex = index;
+        await CurrentIndexChanged.InvokeAsync(CurrentIndex);
+    }
+}
