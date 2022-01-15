@@ -21,12 +21,7 @@
                 </MudListItem>
             }
 
-            @for (var i = GameState.PreviousGuesses.Count + 1; i <= Settings.MaxRounds; i++)
-            {
-                <MudListItem>
-                    <EmptyGuessComponent Size="Size.Large" WordLength="@Settings.WordLength"/>
-                </MudListItem>
-            }
+            
             
             <Blafettis @ref="Blafettis" duration="8000" elementCount="150"/>
             @if (IsGameOver)
@@ -68,6 +63,13 @@
                         HelperText="@($"Type a {Settings.WordLength} letter word")"/>
 
                 </MudListItem>
+
+                @for (var i = GameState.PreviousGuesses.Count + 2; i <= Settings.MaxRounds; i++)
+                {
+                    <MudListItem>
+                        <EmptyGuessComponent Size="Size.Large" WordLength="@Settings.WordLength"/>
+                    </MudListItem>
+                }
 
                 <KeyboardComponent CurrentWordComponent="@_currentWordComponent" GuessResultOptimizer="@_guessResultOptimizer"/>
             }

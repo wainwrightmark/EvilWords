@@ -48,7 +48,7 @@
                 await AddAction();
                 break;
             case backspaceKey:
-                await ClearPrevious();
+                await ClearCurrent();
                 break;
             case deleteKey:
                 await ClearNext();
@@ -66,8 +66,8 @@
 
     public async Task MoveLeft()
     {
+        if(CurrentIndex == 0)return;
         CurrentIndex -= 1;
-        NormalizeIndex();
         await CurrentIndexChanged.InvokeAsync(CurrentIndex);
     }
 
@@ -79,47 +79,47 @@
     
     public async Task MoveRight()
     {
+        if (CurrentIndex >= MaxLength - 1) return;
         CurrentIndex += 1;
-        NormalizeIndex();
         await CurrentIndexChanged.InvokeAsync(CurrentIndex);
     }
 
-    public async Task ClearPrevious()
-    {
-        if (CurrentIndex == 0)
-            CurrentIndex += MaxLength;
-        CurrentIndex -= 1;
-        NormalizeIndex();
-        await CurrentIndexChanged.InvokeAsync(CurrentIndex);
-        await ClearCurrent();
-    }
+    //public async Task ClearPrevious()
+    //{
+    //    if (CurrentIndex == 0)
+    //        CurrentIndex += MaxLength;
+    //    CurrentIndex -= 1;
+    //    NormalizeIndex();
+    //    await CurrentIndexChanged.InvokeAsync(CurrentIndex);
+    //    await ClearCurrent();
+    //}
 
     public async Task ClearNext()
     {
-        await ClearCurrent();
-        CurrentIndex++;
-        NormalizeIndex();
-        await CurrentIndexChanged.InvokeAsync(CurrentIndex);
+        if(CurrentIndex >= MaxLength - 1)return;
+        Text = Text.SetItem(CurrentIndex + 1, null);
+        await TextChanged.InvokeAsync(Text);
     }
 
     public async Task ClearCurrent()
     {
         Text = Text.SetItem(CurrentIndex, null);
         await TextChanged.InvokeAsync(Text);
+        await MoveLeft();
     }
 
     public async Task InputLetter(char c)
     {
         Text = Text.SetItem(CurrentIndex, c);
-        CurrentIndex++;
-        NormalizeIndex();
-        await CurrentIndexChanged.InvokeAsync(CurrentIndex);
         await TextChanged.InvokeAsync(Text);
+        await MoveRight();
+        
     }
 
     public async Task ChangeIndex(int index)
     {
         CurrentIndex = index;
+        NormalizeIndex();
         await CurrentIndexChanged.InvokeAsync(CurrentIndex);
     }
 }
