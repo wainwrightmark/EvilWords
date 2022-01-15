@@ -3,8 +3,10 @@
 @inject Blazored.LocalStorage.ILocalStorageService _localStorage
 
 <CurrentWordComponent @ref="_currentWordComponent"
+
                       Text="@UserGuess"
                       TextChanged="s => UserGuess = s"
+                      AddDisabled="!IsGoodGuess()"
                       AddAction="@AddGuess"
                       CurrentIndex="@SelectedIndex"
                       CurrentIndexChanged="i => SelectedIndex = i"
@@ -57,7 +59,7 @@
                     <WordInputComponent
                         CurrentWordComponent="@_currentWordComponent"
                         Settings="@Settings"
-                        IsAddDisabled="!IsGoodGuess()"
+                        
                         Size="Size.Large"
                         GetColorFunc="GetColor"
                         HelperText="@($"Type a {Settings.WordLength} letter word")"/>
@@ -71,7 +73,7 @@
                     </MudListItem>
                 }
 
-                <KeyboardComponent CurrentWordComponent="@_currentWordComponent" GuessResultOptimizer="@_guessResultOptimizer"/>
+                <KeyboardComponent CurrentWordComponent="@_currentWordComponent" GuessResultOptimizer="@_guessResultOptimizer" />
             }
 
         </MudList>
@@ -102,6 +104,8 @@
     [Parameter]
     [EditorRequired]
     public bool IsEvil { get; set; }
+
+    public GameSettings Settings { get; } = GameSettings.FiveLetter;
 
     private string RunHistoryKey => (IsEvil ? "Evil" : "Nice") + Settings.WordLength + "RunHistory";
 
@@ -167,7 +171,7 @@
         }
     }
 
-    public GameSettings Settings { get; } = GameSettings.FiveLetter;
+    
 
     public bool IsGameOver => GameState.IsWin || GameState.PreviousGuesses.Count >= Settings.MaxRounds;
 

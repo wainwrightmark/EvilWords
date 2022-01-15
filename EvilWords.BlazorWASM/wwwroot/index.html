@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-    <title>EvilWords.BlazorWASM</title>
+    <title>Evil Words</title>
     <base href="/"/>
     <link href="EvilWords.BlazorWASM.styles.css" rel="stylesheet"/>
 
@@ -14,7 +14,10 @@
 </head>
 
 <body>
-<div id="app">Loading...</div>
+<div id="app">
+
+    <div class="spinner"></div>
+</div>
 
 <div id="blazor-error-ui">
     An unhandled error has occurred.
@@ -31,3 +34,35 @@
 </body>
 
 </html>
+
+<style>
+    .spinner {
+        border: 16px solid red;
+        border-top: 16px solid purple;
+        border-radius: 50%;
+        width: 80px;
+        height: 80px;
+        animation: spin 3000ms linear infinite;
+        top: 40%;
+        left: 55%;
+        position: absolute;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg)
+        }
+        
+        50% {
+            transform: rotate(270deg)
+        }
+
+        75% {
+            transform: rotate(180deg)
+        }
+
+        100% {
+            transform: rotate(360deg)
+        }
+    }
+</style>

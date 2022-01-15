@@ -18,3 +18,5 @@
 - [x] Game is broken
 - [ ] Solver should cancel properly
 - [x] Use same component for nice and evil
+- [ ] EvilWords as its own project
+

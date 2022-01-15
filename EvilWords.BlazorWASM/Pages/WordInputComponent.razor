@@ -44,7 +44,7 @@
             <MudIconButton
                 Icon="@Icons.Filled.Add"
                 OnClick="@CurrentWordComponent.AddAction"
-                Disabled="IsAddDisabled"/>
+                Disabled="@CurrentWordComponent.AddDisabled"/>
         </MudButtonGroup>
 
 
@@ -73,10 +73,6 @@
 
     [Parameter]
     public string? Placeholder { get; set; }
-
-    [Parameter]
-    [EditorRequired]
-    public bool IsAddDisabled { get; set; }
 
     [Parameter]
     [EditorRequired]

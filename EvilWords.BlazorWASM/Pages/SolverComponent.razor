@@ -27,7 +27,6 @@
                     <WordInputComponent
                         CurrentWordComponent="@_currentWordComponent"
                         Settings="@Settings"
-                        IsAddDisabled="!IsGoodGuess()"
                         Placeholder="@(Suggestion?.BestWord ?? "")"
                         HelperText="@(Suggestion?.PossibilityText)"
                         Size="Size.Large"
@@ -40,6 +39,7 @@
         <CurrentWordComponent @ref="_currentWordComponent"
                               Text="@UserGuess"
                               TextChanged="s => UserGuess = s"
+                              AddDisabled="!IsGoodGuess()"
                               AddAction="@AddGuess"
                               CurrentIndex="@SelectedIndex"
                               CurrentIndexChanged="i => SelectedIndex = i"

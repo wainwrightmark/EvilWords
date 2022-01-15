@@ -1,49 +1,62 @@
 ﻿@if (@CurrentWordComponent is not null)
 {
-    <MudGrid Spacing="1" Justify="Justify.Center" @onkeydown="kea=> CurrentWordComponent.OnKeyDown(kea)">
+    //@onkeydown="kea=> CurrentWordComponent.OnKeyDown(kea)
+    
         @for (var rowNumber = 0; rowNumber < KeysRows.Count; rowNumber++)
         {
             var rn = rowNumber;
             var row = KeysRows[rowNumber];
-            if (rowNumber == 1)
-            {
-                <MudItem xs="1"/>
-            }
-            else if (rowNumber == 2)
-            {
-                <MudItem xs="1"/>
-                <MudItem xs="1">
-                    <MudChip Size="Size.Small" Label="true" Icon="@Icons.Filled.KeyboardBackspace" Color="Color.Info" OnClick="@CurrentWordComponent.ClearCurrent"/>
-                </MudItem>
-            }
 
-            @foreach (var c in row)
-            {
-                var color = Helpers.GetColor(GuessResultOptimizer, CurrentWordComponent.CurrentIndex, c);
-                <MudItem xs="1">
+            <MudButtonGroup>
+
+                @if (rn == 2)
+                {
+                    <MudChip 
+                        Size="Size.Medium" 
+                        Label="true" 
+                        Icon="@Icons.Filled.KeyboardBackspace" 
+                        Disabled="@CurrentWordComponent.BackspaceDisabled"
+                        Color="Color.Info"
+                        OnClick="@CurrentWordComponent.ClearCurrent"/>
+                }
+
+                @foreach (var c in row)
+                {
+                    var color = GuessResultOptimizer.GetColor(CurrentWordComponent.CurrentIndex, c);
                     <MudChip
                         Color="@color"
                         Variant="@Variant.Filled"
                         Label="true"
-                        Size="Size.Small" OnClick="() => CurrentWordComponent.InputLetter(c)">
+                        Size="Size.Medium" OnClick="() => CurrentWordComponent.InputLetter(c)">
                         @c
                     </MudChip>
-                </MudItem>
-            }
+                }
 
-            if (rowNumber is 0 or 1)
-            {
-                <MudItem xs="2"/>
-            }
-            else
-            {
+                @if (rn is 0 or 1)
+                {
+                @*<MudItem xs="2"/>*@
+                }
+                else
+                {
                 <MudItem xs="1">
-                    <MudChip Size="Size.Small" Label="true" Icon="@Icons.Filled.KeyboardReturn" Color="Color.Info" OnClick="@CurrentWordComponent.AddAction"/>
+                    <MudChip Size="Size.Medium"
+                             Label="true"
+                             Icon="@Icons.Filled.KeyboardReturn" 
+                             Color="Color.Info"
+                             Style="width:250px;"
+                             Disabled="@CurrentWordComponent.AddDisabled"
+                             OnClick="@CurrentWordComponent.AddAction"/>
                 </MudItem>
                 <MudItem xs="2"/>
-            }
+                }
+            </MudButtonGroup>
+
         }
-    </MudGrid>
+    
+
+    @*<MudGrid Spacing="1" Justify="Justify.SpaceBetween" @onkeydown="kea=> CurrentWordComponent.OnKeyDown(kea)">
+        
+    </MudGrid>*@
 }
 
 @code {

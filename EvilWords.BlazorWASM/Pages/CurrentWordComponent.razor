@@ -21,11 +21,14 @@
     [Parameter]
     [EditorRequired]
     public int MaxLength { get; set; }
-    
 
     [Parameter]
     [EditorRequired]
     public Func<Task> AddAction { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public bool AddDisabled { get; set; }
 
 
     public async Task OnKeyDown(KeyboardEventArgs obj)
@@ -103,10 +106,17 @@
 
     public async Task ClearCurrent()
     {
+        while (!Text[CurrentIndex].HasValue)
+        {
+            await MoveLeft();
+        }
+
         Text = Text.SetItem(CurrentIndex, null);
         await TextChanged.InvokeAsync(Text);
         await MoveLeft();
     }
+
+    public bool BackspaceDisabled => Text.Take(CurrentIndex + 1).All(x => !x.HasValue);
 
     public async Task InputLetter(char c)
     {
