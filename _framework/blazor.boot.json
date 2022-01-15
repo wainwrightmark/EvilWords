@@ -13,8 +13,8 @@
       "BlazorWorker.Core.dll": "sha256-SwdjrzSdMTK0p6pOYhA34CV9djek034Uc\/WNkk5AghQ=",
       "BlazorWorker.WorkerBackgroundService.dll": "sha256-+8weot1p6znGhQdA10VOC0S1Mx+gyUz8B67lKw6Ek0U=",
       "BlazorWorker.WorkerCore.dll": "sha256-KtKiHttJCSy+YPU3e787u\/is3ryk6DGGHRpxOLyrIOE=",
-      "EvilWords.BlazorWASM.dll": "sha256-4IJYMHVsP\/j6AvXFtU2ngzQU8KpTQf9c8xXVHtAxDpA=",
-      "EvilWords.dll": "sha256-57VZwNUb9q75agMUibH\/gJVWZcn5gvRd9qJj9XVSZ3Q=",
+      "EvilWords.BlazorWASM.dll": "sha256-W8RK8g\/uK0ggpCZP1q0ie5cLq826\/xRBeoKlc7prJGw=",
+      "EvilWords.dll": "sha256-mxIrLgajctT+OnT9AC3xgFYoRZX10fFitf4bGj5yio0=",
       "Generator.Equals.Runtime.dll": "sha256-CMjBbqRNS+IOrICOYT\/XTsOkWuHfKt3HX77jsAqp7fo=",
       "Microsoft.AspNetCore.Components.dll": "sha256-6oSM4CKAOLsiL97OfnxEBcrgj80DLIluTL1XkAYTiK8=",
       "Microsoft.AspNetCore.Components.Forms.dll": "sha256-jl5A7Pv+VfrShD3mNcK1EVIQ1luoqe6N9FmQKx226kc=",
@@ -85,8 +85,8 @@
     "libraryInitializers": null,
     "pdb": null,
     "runtime": {
-      "dotnet.6.0.1.app2ihvsnu.js": "sha256-b82Uwue9Mzgq\/MO6DFTnOzxIcJMXF9TDrp1DMvqFtLE=",
-      "dotnet.wasm": "sha256-h1w1LJskRmZ7ORYubKhqrkgYP3AqwPegB2\/lBefOeqw="
+      "dotnet.6.0.1.app2ihvsnu.js": "sha256-Lb\/yJYDqkR6OqGXrxI3+7KMmmvmYpUmE50okRYDqtt8=",
+      "dotnet.wasm": "sha256-0KbSMZKTSWsSlUE\/iO+E3Y37aBzQjV0TXUV04JnNG\/I="
     },
     "satelliteResources": null
   }
