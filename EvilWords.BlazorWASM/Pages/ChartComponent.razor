@@ -1,13 +1,22 @@
 ﻿@using System.Xml.Serialization
-<MudChart ChartType="ChartType.Bar" 
+@*<MudChart ChartType="ChartType.Bar" 
           ChartOptions="@ChartOptions"
-          ChartSeries="@ChartSeries"  
+          ChartSeries="@ChartSeries"
           XAxisLabels="@XAxisLabels"
           Width="100%" 
           Height="300px" 
           
 
-/>
+/>*@
+
+<MudChart 
+    ChartType="ChartType.Pie"
+    InputData="InputData"
+    InputLabels="InputLabels"
+    Width="300px" Height="300px"
+          />
+
+
 
 @code {
     [Parameter]
@@ -16,20 +25,49 @@
 
     public const int MaxGuesses = 6;
 
-    public List<ChartSeries> ChartSeries => new()
+    public double[] InputData
     {
-        new() { Data = @History.Results.Select(x => x.Guesses ?? 0d).ToArray() },
-        new() { Data = @History.Results.Select(x => x.Guesses.HasValue? 0d : MaxGuesses + 1) .ToArray() },
-    };
+        get
+        {
+            return History.Results
+                .GroupBy(x => x.Guesses)
+                .OrderBy(x => x.Key)
+                .Select(x=>x.Count() + 0d )
+                .ToArray();
+        }
+    }
 
-    public string[] XAxisLabels => History.Results.Select(x => x.HiddenWord).ToArray();
+    public string[] InputLabels
+    {
+        get
+        {
+            return History.Results
+                .GroupBy(x => x.Guesses)
+                .OrderBy(x => x.Key)
+                .Select(x =>
+                {
+                    if (x.Key.HasValue) return $"{x.Key} Guesses";
+                    return "Failed";
+                } )
+                .ToArray();
+        }
+    }
+
+
+    //public List<ChartSeries> ChartSeries => new()
+    //{
+    //    new() { Data = @History.Results.Select(x => x.Guesses ?? 0d).ToArray() },
+    //    new() { Data = @History.Results.Select(x => x.Guesses.HasValue? 0d : MaxGuesses + 1) .ToArray() },
+    //};
+
+    //public string[] XAxisLabels => History.Results.Select(x => x.HiddenWord).ToArray();
 
 
     public ChartOptions ChartOptions => new ()
     {
         
         DisableLegend = true, XAxisLines = false, YAxisLines = false,
-        ChartPalette = new []{"Green", "Red"}
+        ChartPalette = new []{"Green", "Red"},
     };
 
 }

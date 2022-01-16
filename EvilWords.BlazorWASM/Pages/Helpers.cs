@@ -2,7 +2,6 @@
 using System.Diagnostics.Contracts;
 using Generator.Equals;
 using MudBlazor;
-using MudBlazor.Extensions;
 
 namespace EvilWords.BlazorWASM.Pages;
 
@@ -57,7 +56,7 @@ public partial record RunHistory([property: OrderedEquality] IReadOnlyList<GameR
     public RunHistory Add(GameResult gameResult) => this with { Results = Results.ToImmutableList().Add(gameResult) };
 }
 
-public readonly record struct GameResult(int? Guesses, string HiddenWord)
+public readonly record struct GameResult(int? Guesses, string HiddenWord, DateTime? GameFinishedTime)
 {
     public bool WasWin() => Guesses.HasValue;
 }

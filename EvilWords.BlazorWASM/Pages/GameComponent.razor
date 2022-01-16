@@ -234,7 +234,7 @@
         if (!IsGameOver)
         {
             var guessCount = GameState.IsWin ? GameState.PreviousGuesses.Count : null as int?;
-            var gameResult = new GameResult(guessCount, hiddenWord);
+            var gameResult = new GameResult(guessCount, hiddenWord, DateTime.Now);
             await SetHistory(History.Add(gameResult));
         }
 
@@ -279,15 +279,14 @@
 
         if (GameState.IsWin)
         {
-            var gameResult = new GameResult(GameState.PreviousGuesses.Count, guess);
+            var gameResult = new GameResult(GameState.PreviousGuesses.Count, guess, DateTime.Now);
             await SetHistory(History.Add(gameResult));
             Blafettis.RaiseConfetti(); // raise confetti via method
         }
-
-        if (GameState.PreviousGuesses.Count >= Settings.MaxRounds)
+        else if (GameState.PreviousGuesses.Count >= Settings.MaxRounds)
         {
             var hiddenWord = Settings.GetRandomHiddenWord(_guessResultOptimizer, Random, true);
-            var gameResult = new GameResult(null, hiddenWord);
+            var gameResult = new GameResult(null, hiddenWord, DateTime.Now);
             await SetHistory(History.Add(gameResult));
         }
         StateHasChanged();
