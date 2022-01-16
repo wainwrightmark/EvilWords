@@ -225,30 +225,25 @@ namespace EvilWords {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Honey
-        ///Taunt
-        ///Devil
-        ///Demon
-        ///Loser
-        ///Dummy
-        ///Nasty
-        ///Trick
-        ///Scorn
-        ///Sneer
-        ///Scoff
-        ///Laugh
-        ///Moron
-        ///Clown
-        ///Dunce
-        ///Twerp
-        ///Cheat
-        ///Bluff
-        ///Wrong
-        ///Curse
-        ///Awful
-        ///Venom
-        ///Taint
-        ///Moist.
+        ///   Looks up a localized string similar to Honey //Awwww....
+        ///Taunt //Insert taunt here
+        ///Devil //You should have tried my name
+        ///Demon //You should have tried my name
+        ///Loser //Sorry, loser, the word was
+        ///Dummy //Sorry, dummy, the word was
+        ///Moron //Sorry, moron, the word was
+        ///Idiot //Sorry, idiot, the word was
+        ///Clown //Sorry, clown, the word was
+        ///Dunce //Sorry, dunce, the word was
+        ///Twerp //Sorry, twerp, the word was
+        ///Nasty //Ewww, that was
+        ///Trick //I tricked you!
+        ///Scorn // 
+        ///Sneer //
+        ///Scoff //
+        ///Laugh //Hahahahaha
+        ///Cheat //Don&apos;t you know, honey, I
+        ///Wro [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string FiveLetterTaunts {
             get {

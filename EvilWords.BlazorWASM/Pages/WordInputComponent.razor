@@ -47,17 +47,17 @@
                 Disabled="@CurrentWordComponent.AddDisabled"/>
         </MudButtonGroup>
 
-
-        @if (!string.IsNullOrWhiteSpace(HelperText))
-        {
-            <div class="mud-input-control-helper-container">
-                <p class="mud-input-helper-text">
-                    <div class="d-flex">
-                        <div class="mr-auto">@HelperText</div>
-                    </div>
-                </p>
-            </div>
-        }
+        <div class="mud-input-control-helper-container">
+            <p class="mud-input-helper-text">
+                <div class="d-flex">
+                    <div class="mr-auto">@HelperText</div>
+                </div>
+            </p>
+        </div>
+        @*@if (!string.IsNullOrWhiteSpace(HelperText))*@
+        @*{
+            
+        }*@
 
     </div>
 
