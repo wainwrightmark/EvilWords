@@ -14,6 +14,7 @@ public static class Helpers
             ResultColor.Green => Color.Success,
             ResultColor.Yellow => Color.Warning,
             ResultColor.Red => Color.Error,
+            ResultColor.Purple => Color.Secondary,
             ResultColor.Blue => Color.Info,
             _ => throw new ArgumentOutOfRangeException(nameof(resultColor), resultColor, null)
         };
@@ -35,14 +36,7 @@ public static class Helpers
         if (gro is null) return Color.Info;
 
         var r = gro.GetResultColor(i, c);
-        return r switch
-        {
-            ResultColor.Green => Color.Success,
-            ResultColor.Yellow => Color.Warning,
-            ResultColor.Red => Color.Error,
-            ResultColor.Blue => Color.Info,
-            _ => Color.Info
-        };
+        return r?.GetColor() ?? Color.Info;
     }
     
 }

@@ -22,4 +22,9 @@ public enum ResultColor
     /// </summary>
     Red,
 
+    /// <summary>
+    /// Character Does not appear here
+    /// </summary>
+    Purple
+
 }

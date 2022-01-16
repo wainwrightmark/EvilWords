@@ -11,6 +11,7 @@
 
 <MudChart 
     ChartType="ChartType.Pie"
+    ChartOptions="@ChartOptions"
     InputData="InputData"
     InputLabels="InputLabels"
     Width="300px" Height="300px"
@@ -66,8 +67,8 @@
     public ChartOptions ChartOptions => new ()
     {
         
-        DisableLegend = true, XAxisLines = false, YAxisLines = false,
-        ChartPalette = new []{"Green", "Red"},
+        DisableLegend = false,
+        ChartPalette = new []{"Red", "Green", "Blue"},
     };
 
 }

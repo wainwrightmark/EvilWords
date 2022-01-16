@@ -100,12 +100,14 @@ public class UnitTest1
     }
 
     [Theory]
-    [InlineData(100, 10, 123)]
-    [InlineData(100, 10, 456)]
-    [InlineData(100, 100, 123)]
-    [InlineData(100, 100, 456)]
-    public void TestManyGames(int gamesToPlay, int? stochasticSolutions, int seed)
+    [InlineData(100, 10, 123, false)]
+    [InlineData(100, 10, 456, false)]
+    [InlineData(100, 100, 123, false)]
+    [InlineData(100, 100, 456, false)]
+    [InlineData(100, 100, 456, true)]
+    public void TestManyGames(int gamesToPlay, int? stochasticSolutions, int seed, bool evil)
     {
+        var sw = Stopwatch.StartNew();
         var random = new Random(seed);
         var settings = GameSettings.FiveLetter;
         var totalRounds = 0;
@@ -123,7 +125,12 @@ public class UnitTest1
 
         for (var i = 0; i < gamesToPlay; i++)
         {
-            var word = settings.GetRandomHiddenWord(null, random, false);
+            string? word;
+            if (evil) word = null;
+            else
+            {
+                word = settings.GetRandomHiddenWord(null, random, false);
+            }
             var logger = new XunitLogger(TestOutputHelper,$"Game {i}: " + word);
             var rounds = GameHelper.RunGame(word, settings, solveSettings, cache, logger);
             totalRounds += rounds;
@@ -132,6 +139,7 @@ public class UnitTest1
 
         var meanTotalRounds = ((double) totalRounds) / gamesToPlay;
 
+        TestOutputHelper.WriteLine(sw.Elapsed.ToString());
         TestOutputHelper.WriteLine($"Mean Total Rounds: {meanTotalRounds}");
         TestOutputHelper.WriteLine($"Max Total Rounds: {maxRounds}");
 

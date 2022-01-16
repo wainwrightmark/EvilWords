@@ -25,7 +25,7 @@ public partial record GuessResultOptimizer(int ExpectedLength,
 
         if (MaxMultiplicities[c - 'A'] == 0) return ResultColor.Red;
         if (KnownCharacters.Contains((c, index))) return ResultColor.Green;
-        if (KnownBadCharacterIndexes[c].Contains(index)) return ResultColor.Red;
+        if (KnownBadCharacterIndexes[c].Contains(index)) return ResultColor.Purple;
 
 
         if (MinMultiplicities.Any(x => x.c == c && x.minCount > 

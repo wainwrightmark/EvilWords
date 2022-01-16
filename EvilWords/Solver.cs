@@ -69,21 +69,10 @@ public static class Solver
         {
             var possibleGro = GuessResultOptimizer.Create(guessResult);
             var newGro = gro is null ? possibleGro : gro.Combine(possibleGro);
-            
 
             var solutionsRemaining =possibleHiddenWords.Count(newGro.Allow);
-
             //TODO use a cache here somehow
-            //    solutionsRemainingCache.GetOrAdd(
-            //    newGro,
-            //    gro1 =>
-            //    {
-            //        var sr = possibleHiddenWords.Count(gro1.Allow);
-            //        return sr;
-            //    }
-            //);
 
-            
             total += (multiplier * solutionsRemaining);
 
             if (total > giveUpAfter)
@@ -148,7 +137,7 @@ public static class Solver
         var possibleGuesses = solveSettings.OptimalGuessDictionary
             .GetValueOrDefault(previousGuessKey, gameSettings.PossibleGuesses);
 
-        if (solveSettings.EliminateUselessGuesses) possibleGuesses = FilterGuesses(possibleGuesses, gro);
+        if (solveSettings.EliminateUselessGuesses) possibleGuesses = FilterGuesses(possibleGuesses, gro, remainingHiddenWords);
 
         var leastTotal = int.MaxValue;
 
@@ -210,7 +199,7 @@ public static class Solver
         var possibleGuesses = solveSettings.OptimalGuessDictionary
             .GetValueOrDefault(previousGuessKey, gameSettings.PossibleGuesses);
 
-        if (solveSettings.EliminateUselessGuesses) possibleGuesses = FilterGuesses(possibleGuesses, gro);
+        if (solveSettings.EliminateUselessGuesses) possibleGuesses = FilterGuesses(possibleGuesses, gro, possibleGuesses);
 
         var leastTotal = int.MaxValue;
         var bestGuess = possibleGuesses
@@ -233,12 +222,26 @@ public static class Solver
         return bestGuess;
     }
 
-    private static IReadOnlyList<string> FilterGuesses(IReadOnlyList<string> guesses, GuessResultOptimizer? gro)
+    private static IReadOnlyList<string> FilterGuesses(IReadOnlyList<string> guesses, GuessResultOptimizer? gro, IReadOnlyCollection<string> possibleSolutions)
     {
         if (gro is null) return guesses;
 
-        var newGuesses = guesses.Where(gro.IsUseful).ToList();
+        var usedCharacters = possibleSolutions.SelectMany(x => x).Distinct().Take(23).ToHashSet();
 
-        return newGuesses;
+        foreach (var c in possibleSolutions
+                     .TakeWhile(_=>usedCharacters.Count < 26)
+                     .SelectMany(x=>x)) 
+            usedCharacters.Add(c);
+
+        if (usedCharacters.Count >= 23)
+        {
+            return guesses;
+        }
+
+        var newGuesses = guesses.Where(x => usedCharacters.Intersect(x).Take(2).Count() >= 2).ToList();
+
+        var newGuesses2 = newGuesses.Where(gro.IsUseful).ToList();
+
+        return newGuesses2;
     }
 }

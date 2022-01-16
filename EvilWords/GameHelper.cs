@@ -15,6 +15,7 @@ public static class GameHelper
             ResultColor.Yellow => 'Y',
             ResultColor.Red => 'R',
             ResultColor.Blue => 'B',
+            ResultColor.Purple => 'P',
             _ => throw new ArgumentOutOfRangeException(nameof(resultColor), resultColor, null)
         };
     }
@@ -29,6 +30,7 @@ public static class GameHelper
             ResultColor.Yellow => ResultColor.Red,
             ResultColor.Red => ResultColor.Green,
             ResultColor.Blue => ResultColor.Blue,
+            ResultColor.Purple => ResultColor.Purple,
             _ => throw new ArgumentOutOfRangeException(nameof(resultColor), resultColor, null)
         };
     }
