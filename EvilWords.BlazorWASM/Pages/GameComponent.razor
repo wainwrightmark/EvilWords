@@ -36,7 +36,8 @@
                     else if (History.Results.Any())
                     {
                         <MudText Typo="Typo.h6">Sorry, honey, the word was</MudText>
-                        <GuessComponent Size="Size.Large" GuessResult="@_guessResultOptimizer.GetFakeGuessResult(@History.Results.Last().HiddenWord)">
+                        <GuessComponent Size="Size.Large" 
+                                        GuessResult="@_guessResultOptimizer.GetFakeGuessResult(@History.Results.Last().HiddenWord)">
 
                         </GuessComponent>
                     }
@@ -59,10 +60,9 @@
                     <WordInputComponent
                         CurrentWordComponent="@_currentWordComponent"
                         Settings="@Settings"
-                        
                         Size="Size.Large"
                         GetColorFunc="GetColor"
-                        HelperText="@($"Type a {Settings.WordLength} letter word")"/>
+                        HelperText="@HelperText"/>
 
                 </MudListItem>
 
@@ -73,7 +73,9 @@
                     </MudListItem>
                 }
 
-                <KeyboardComponent CurrentWordComponent="@_currentWordComponent" GuessResultOptimizer="@_guessResultOptimizer" />
+                <KeyboardComponent 
+                    CurrentWordComponent="@_currentWordComponent" 
+                    GuessResultOptimizer="@_guessResultOptimizer" />
             }
 
         </MudList>
@@ -87,6 +89,19 @@
     public RunHistory History => _history;
     private GameState _gameState = GameState.Empty;
     private GuessResultOptimizer? _guessResultOptimizer;
+
+    public string HelperText
+    {
+        get
+        {
+            if (_currentWordComponent.Text.All(x => x.HasValue) && !IsGoodGuess())
+                return "Unrecognised Word";
+            else if (_currentWordComponent.Text.All(x => !x.HasValue))
+                return $"Enter a {Settings.WordLength} letter word";
+
+            return "";
+        }
+    }
 
     public GameState GameState
     {
