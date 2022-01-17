@@ -7,12 +7,16 @@
 
 .mud-chip-size-large {
     width: 15%;
+    min-width: 15%;
 }
 
 .mud-chip {
     margin: 1px;
 }
 
+.mud-chip.mud-chip-size-medium {
+    width: 32px;
+    }
 .mud-container {
     padding-left: 0px;
     padding-right: 0px;
