@@ -1,7 +1,7 @@
 ﻿@if (CurrentWordComponent is not null)
 {
-    //@onkeydown="kea=> CurrentWordComponent.OnKeyDown(kea)
-    
+
+    <div @onkeydown="kea=> CurrentWordComponent.OnKeyDown(kea)">
         @for (var rowNumber = 0; rowNumber < KeysRows.Count; rowNumber++)
         {
             var rn = rowNumber;
@@ -38,25 +38,22 @@
                 }
                 else
                 {
-                <MudItem xs="1">
-                    <MudChip Size="Size.Medium"
-                             Label="true"
-                             Icon="@Icons.Filled.Send" 
-                             Color="Color.Info"
-                             Style="width:250px;"
-                             Disabled="@CurrentWordComponent.AddDisabled"
-                             OnClick="@CurrentWordComponent.AddAction"/>
-                </MudItem>
-                <MudItem xs="2"/>
+                    <MudItem xs="1">
+                        <MudChip Size="Size.Medium"
+                                 Label="true"
+                                 Icon="@Icons.Filled.Send" 
+                                 Color="Color.Info"
+                                 Style="width:250px;"
+                                 Disabled="@CurrentWordComponent.AddDisabled"
+                                 OnClick="@CurrentWordComponent.AddAction"/>
+                    </MudItem>
+                    <MudItem xs="2"/>
                 }
             </MudButtonGroup>
 
         }
-    
 
-    @*<MudGrid Spacing="1" Justify="Justify.SpaceBetween" @onkeydown="kea=> CurrentWordComponent.OnKeyDown(kea)">
-        
-    </MudGrid>*@
+    </div>
 }
 
 @code {

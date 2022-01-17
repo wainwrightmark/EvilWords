@@ -1,5 +1,5 @@
 ﻿@inject Blazored.LocalStorage.ILocalStorageService _localStorage
-
+@page "/History"
 
 @if (Histories is not null)
 {
@@ -26,7 +26,7 @@ else
         {
             var histories = new List<RunHistory>();
             var l = await _localStorage.LengthAsync(null);
-            for (int i = 0; i < l; i++)
+            for (var i = 0; i < l; i++)
             {
                 var key = await _localStorage.KeyAsync(i, null);
 
