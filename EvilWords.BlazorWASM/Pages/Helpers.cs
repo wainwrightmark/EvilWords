@@ -67,7 +67,9 @@ public readonly record struct SuggestionData(string BestWord, IReadOnlyList<stri
                 return $"Must be '{RemainingPossibilities.Single()}'";
             if (RemainingPossibilities.Count <= 4)
                 return $"'{string.Join(", ", RemainingPossibilities)}'";
-            return $"{RemainingPossibilities.Count} Possible Solutions";
+            if(string.IsNullOrWhiteSpace(BestWord))
+                return $"{RemainingPossibilities.Count} Possible Solutions. Loading Best Guess...";
+            return $"{RemainingPossibilities.Count} Possible Solutions. Try '{BestWord}'";
         }
     }
 }
