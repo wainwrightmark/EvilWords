@@ -43,6 +43,23 @@
 
                 <MudListItem>
                     <MudButton OnClick="Restart">New Game</MudButton>
+                    
+                    @{
+                        string quote;
+                        if (GameState.IsWin)
+                        {
+                            quote = $"I beat EvilWords in {GameState.PreviousGuesses.Count} guesses" + Environment.NewLine + $"The word was '{History.Results.Last().HiddenWord}'";
+                        }
+                        else
+                        {
+                            quote = "I lost at EvilWords" + Environment.NewLine + $"The word was '{History.Results.Last().HiddenWord}'";
+                        }
+                    }
+
+                    <MudIconButton Link="@SocialHelpers.GetFacebookShareURL(quote)" Icon="@Icons.Custom.Brands.Facebook" Target="_blank"/>
+                    <MudIconButton Link="@SocialHelpers.GetTwitterShareUrl(quote)" Icon="@Icons.Custom.Brands.Twitter" Target="_blank"/>
+                    
+
                 </MudListItem>
 
                 <MudListItem>

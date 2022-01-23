@@ -68,14 +68,23 @@ public partial record GameState([property: OrderedEquality] IReadOnlyList<GuessR
 
     public GuessResultOptimizer? MakeGuessResultOptimizer()
     {
-        GuessResultOptimizer? gro = null;
-        foreach (var guess in PreviousGuesses)
+        try
         {
-            var guessGro = GuessResultOptimizer.Create(guess);
-            gro = gro is null ? guessGro : gro.Combine(guessGro);
+            GuessResultOptimizer? gro = null;
+            foreach (var guess in PreviousGuesses)
+            {
+                var guessGro = GuessResultOptimizer.Create(guess);
+                gro = gro is null ? guessGro : gro.Combine(guessGro);
+            }
+
+            return gro;
+        }
+        catch (Exception) //Might be an exception
+        {
+            return null;
         }
 
-        return gro;
+        
     }
 
 }
