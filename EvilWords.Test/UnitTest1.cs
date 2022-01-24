@@ -25,6 +25,7 @@ public class UnitTest1
     [InlineData("ONION", "NANNY", "YRYRR")]
     [InlineData("ONION", "NANYN", "YRRRG")]
     [InlineData("CIGAR", "CRAIG", "GYYYY")]
+    [InlineData("UDDER", "QUEER", "RYRGG")]
     public void TestColors(string hiddenWord, string guess, string expectedColors)
     {
         var r = GuessResult.ScoreWord(hiddenWord.ToUpperInvariant(), guess.ToUpperInvariant());
@@ -34,6 +35,7 @@ public class UnitTest1
 
     [Theory]
     [InlineData("SOARE-RRRRR_BUNDT-RRRRG_FILUM-RGRRR", "WIGHT", "RGGGG")]
+    [InlineData("BOBBY-RRRRR_PLACE-RRRRY_KINGS-RRRRR_EVERT-YRRYR_QUEER-RYYRG_DEMUR-YYRYG", "UDDER", "RRRRR")]
     public void TestWorstCases(string stateSerialized, string nextGuess, string nextGuessColors)
     {
         var state = GameStateSerialization.Deserialize(stateSerialized);
@@ -185,6 +187,8 @@ public class UnitTest1
     [Theory]
     [InlineData("JUJUS")]
     [InlineData("SOARE")]
+    [InlineData("ROATE")]
+    [InlineData("ARISE")]
     public void TestTotals(string guess)
     {
         var settings = GameSettings.FiveLetter;
@@ -212,6 +216,53 @@ public class UnitTest1
         TestOutputHelper.WriteLine($"Average Eliminated: {averageEliminated}");
     }
     
+    [Fact]
+    public void FindBestFirstWordPessimistic()
+    {
+        var sw = Stopwatch.StartNew();
+
+        var result =
+        GameSettings.FiveLetter.PossibleGuesses.Select(guess =>
+                
+                (guess, GetWorstGuessCount(
+                    GameSettings.FiveLetter, guess))
+                )
+            .Where(x=>x.Item2.HasValue)
+            .OrderBy(x => x.Item2).First();
+
+
+        sw.Stop();
+
+        TestOutputHelper.WriteLine(sw.Elapsed.ToString());
+        TestOutputHelper.WriteLine(result.guess);
+        TestOutputHelper.WriteLine(result.Item2.ToString());
+
+
+
+        static int? GetWorstGuessCount(GameSettings settings, string guess)
+        {
+            var gro = GuessResultOptimizer.Create(settings);
+
+            var possibleHiddenWords = settings.PossibleHiddenWords.Where(gro.Allow).ToList();
+
+            if (!possibleHiddenWords.Any())
+                return null;
+
+            var worstCaseHiddenWord = possibleHiddenWords.Select(hiddenWord =>
+                    {
+                        var guessResult = GuessResult.ScoreWord(hiddenWord, guess);
+                        return (guessResult, hiddenWord);
+                    }
+        
+                ).GroupBy(x=>x.guessResult, x=>x.hiddenWord)
+            
+                .OrderByDescending(x=>x.Count())
+                .ThenBy(x=>x.Any(w=>w == guess))
+                .First();
+
+            return worstCaseHiddenWord.Count();
+        }
+    }
     
     [Theory]
     [InlineData(10, 123)]
@@ -239,8 +290,10 @@ public class UnitTest1
 
     [Theory]
     [InlineData("Soare")]
+    [InlineData("roate")]
     [InlineData("anger")]  
     [InlineData("jujus")]  
+    [InlineData("arise")]  
     public void TestWorstCase(string guess)
     {
         guess = guess.ToUpperInvariant();
@@ -261,8 +314,13 @@ public class UnitTest1
         TestOutputHelper.WriteLine($"{sw.Elapsed} {guessResult} {string.Join(",", possibleSolutions.Take(5))}   ({possibleSolutions.Count} options)");
     }
 
+    
+
+
     [Theory]
     [InlineData("soare")]
+    [InlineData("roate")]
+    [InlineData("arise")]
     public void FindBestStage2Words(string firstGuess)
     {
         var settings = GameSettings.FiveLetter;

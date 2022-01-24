@@ -55,7 +55,7 @@ public partial record GuessResultOptimizer(int ExpectedLength,
 
         var knownBadCharacterIndexes = gr.Results
             .Select((x, i) => (x, i))
-            .Where(x => x.x.ResultColor == ResultColor.Yellow)
+            .Where(x => x.x.ResultColor != ResultColor.Green)
             .Select(x => (x.x.Character, x.i)).ToLookup(x => x.Character, x => x.i);
 
         var minMultiplicities = gr.Results
