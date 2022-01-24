@@ -1,0 +1,25 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;&#xD;
+  &lt;Assembly Path="C:\Users\wainw\.nuget\packages\blazor-dom-confetti\0.0.0.5\lib\net5.0\blazor-dom-confetti.dll" /&gt;&#xD;
+  &lt;Assembly Path="C:\Program Files\dotnet\shared\Microsoft.NETCore.App\6.0.1\System.Collections.Immutable.dll" /&gt;&#xD;
+  &lt;Assembly Path="C:\Users\wainw\.nuget\packages\tewr.blazorworker.backgroundservice\3.1.0\lib\net6.0\BlazorWorker.WorkerBackgroundService.dll" /&gt;&#xD;
+  &lt;Assembly Path="C:\Users\wainw\.nuget\packages\mudblazor\6.0.4\lib\net6.0\MudBlazor.dll" /&gt;&#xD;
+  &lt;Assembly Path="C:\Users\wainw\.nuget\packages\microsoft.aspnetcore.components.web\6.0.1\lib\net6.0\Microsoft.AspNetCore.Components.Web.dll" /&gt;&#xD;
+&lt;/AssemblyExplorer&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=98678538_002D7965_002D4136_002Db896_002Db4b0bb26d310/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="TestOptimizationStage2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::A3ED8973-ACA6-4568-8C26-C9860965E817::net6.0::EvilWords.Test.UnitTest1.TestOptimizationStage2&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::A3ED8973-ACA6-4568-8C26-C9860965E817::net6.0::EvilWords.Test.UnitTest1.TestWorstCases&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::A3ED8973-ACA6-4568-8C26-C9860965E817::net6.0::EvilWords.Test.UnitTest1.TestGame&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::A3ED8973-ACA6-4568-8C26-C9860965E817::net6.0::EvilWords.Test.UnitTest1.TestTotals&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::A3ED8973-ACA6-4568-8C26-C9860965E817::net6.0::EvilWords.Test.UnitTest1.TestEliminations&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::A3ED8973-ACA6-4568-8C26-C9860965E817::net6.0::EvilWords.Test.UnitTest1.TestManyGames&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::A3ED8973-ACA6-4568-8C26-C9860965E817::net6.0::EvilWords.Test.UnitTest1.TestRemainingWords&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::A3ED8973-ACA6-4568-8C26-C9860965E817::net6.0::EvilWords.Test.UnitTest1.TestBestFirstGuess&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::A3ED8973-ACA6-4568-8C26-C9860965E817::net6.0::EvilWords.Test.UnitTest1.TestColors&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::A3ED8973-ACA6-4568-8C26-C9860965E817::net6.0::EvilWords.Test.UnitTest1.TestWorstCase&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::A3ED8973-ACA6-4568-8C26-C9860965E817::net6.0::EvilWords.Test.UnitTest1.FindBestStage2Words&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::A3ED8973-ACA6-4568-8C26-C9860965E817::net6.0::EvilWords.Test.UnitTest1.FindBestFirstWordPessimistic&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=Blafettis/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>
