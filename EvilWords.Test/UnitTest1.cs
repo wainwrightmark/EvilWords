@@ -45,6 +45,25 @@ public class UnitTest1
         worstCase.ColorText().Should().Be(nextGuessColors);
     }
 
+    [Theory]
+    [InlineData("","arise","BBBBB" )]
+    [InlineData("arise-rrrrr","arise","rrrrr" )]
+    [InlineData("arise-rrrrr","hello","BRBBB" )]
+    public void TestKeyboardColoring(string stateSerialized, string nextGuess, string nextGuessColors)
+    {
+        var state = GameStateSerialization.Deserialize(stateSerialized.ToUpperInvariant());
+        var gro = state.MakeGuessResultOptimizer()?? GuessResultOptimizer.Create(GameSettings.FiveLetter);
+
+        var actualColors =
+            new string(
+                nextGuess.ToUpperInvariant().Select((x, i) => gro.GetResultColor(i, x))
+                    .Select(x => x?.ToChar()??'B').ToArray()
+            );
+
+        actualColors.Should().Be(nextGuessColors.ToUpperInvariant());
+
+    }
+
     [Fact]
     public void TestEliminations()
     {

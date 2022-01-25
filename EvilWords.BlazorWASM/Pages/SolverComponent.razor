@@ -1,7 +1,5 @@
 ﻿@implements IDisposable;
 @inject IWorkerFactory _workerFactory
-@page "/Solver"
-@page "/EvilWords/Solver"
 
 <MudPaper>
     <MudContainer Fixed="false" MaxWidth="MaxWidth.ExtraSmall">
@@ -49,6 +47,8 @@
 @code{
     private GameState _gameState = new(ImmutableArray<GuessResult>.Empty);
 
+    [Parameter]
+    [EditorRequired]
     public GameState GameState
     {
         get => _gameState;

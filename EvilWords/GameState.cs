@@ -24,8 +24,17 @@ public static class GameStateSerialization
         if(string.IsNullOrWhiteSpace(s))
             return GameState.Empty;
 
-        var grs = s.Split('_', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(DeserializeGr).ToImmutableList();
-        return new GameState(grs);
+        try
+        {
+            var grs = s.Split('_', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(DeserializeGr).ToImmutableList();
+            return new GameState(grs);
+        }
+        catch (Exception e)
+        {
+            return GameState.Empty;
+        }
+
+        
 
         static GuessResult DeserializeGr(string s)
         {

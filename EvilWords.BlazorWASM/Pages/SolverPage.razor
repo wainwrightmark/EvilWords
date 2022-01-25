@@ -1,0 +1,25 @@
+﻿@page "/Solver"
+
+<SolverComponent GameState="GameState"/>
+
+@code {
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string Data { get; set; }
+
+
+    public GameState GameState { get; private set; } = GameState.Empty;
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+
+        if (string.IsNullOrWhiteSpace(Data))
+            GameState = GameState.Empty;
+        else GameState = GameStateSerialization.Deserialize(Data);
+
+    }
+
+}

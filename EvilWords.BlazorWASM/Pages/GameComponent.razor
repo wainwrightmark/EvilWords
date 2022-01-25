@@ -56,8 +56,26 @@
                         }
                     }
 
-                    <MudIconButton Link="@SocialHelpers.GetFacebookShareURL(quote)" Icon="@Icons.Custom.Brands.Facebook" Target="_blank"/>
-                    <MudIconButton Link="@SocialHelpers.GetTwitterShareUrl(quote)" Icon="@Icons.Custom.Brands.Twitter" Target="_blank"/>
+                    <MudIconButton
+                        Link="@SocialHelpers.GetFacebookShareURL(quote)" 
+                        Icon="@Icons.Custom.Brands.Facebook" 
+                        Title="Share on Facebook"
+                        Target="_blank"/>
+
+                    <MudIconButton 
+                        Link="@SocialHelpers.GetTwitterShareUrl(quote)" 
+                        Icon="@Icons.Custom.Brands.Twitter" 
+                        Title="Share on Twitter"
+                        Target="_blank"/>
+                    
+                    <MudIconButton 
+                        Link="https://github.com/wainwrightmark/EvilWords" 
+                        Icon="@Icons.Custom.Brands.GitHub" 
+                        Title="View on Github"
+                        Target="_blank"/>
+                    
+                    <MudButton 
+                        Link="@($"./Solver?data={GameState.Serialize()}")">View in Solver</MudButton>
                     
 
                 </MudListItem>
