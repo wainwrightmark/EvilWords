@@ -23,13 +23,41 @@ public partial record GuessResultOptimizer(int ExpectedLength,
         if (!char.IsLetter(c)) return null;
         c = char.ToUpperInvariant(c);
 
+        foreach (var (c1, i) in KnownCharacters)
+        {
+            if (i == index)
+            {
+                if (c1 == c) return ResultColor.Green;
+                return ResultColor.Red;
+            }
+        }
+
+
         if (MaxMultiplicities[c - 'A'] == 0) return ResultColor.Red;
-        if (KnownCharacters.Contains((c, index))) return ResultColor.Green;
+        
         if (KnownBadCharacterIndexes[c].Contains(index)) return ResultColor.Purple;
 
 
-        if (MinMultiplicities.Any(x => x.c == c && x.minCount > 
-            KnownCharacters.Count(k=> k.c == c))) return ResultColor.Yellow;
+        foreach (var (_, minCount) in MinMultiplicities.Where(x=>x.c == c))
+        {
+            var actualCount = KnownCharacters.Count(k => k.c == c);
+            if (minCount > actualCount)
+            {
+                //We know that we need a copy of this character.
+                //If we know it cant be in any other position return green
+                for (int i = 0; i < ExpectedLength; i++)
+                {
+                    if(i == index)continue;
+                    if (KnownCharacters.Any(x => x.index == i)) continue;
+                    if(KnownBadCharacterIndexes[c].Contains(i)) continue;
+
+                    return ResultColor.Yellow;
+                }
+
+                return ResultColor.Green;
+            }
+
+        }
         return null;
     }
 

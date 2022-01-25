@@ -49,6 +49,8 @@ public class UnitTest1
     [InlineData("","arise","BBBBB" )]
     [InlineData("arise-rrrrr","arise","rrrrr" )]
     [InlineData("arise-rrrrr","hello","BRBBB" )]
+    [InlineData("mummy-yryyr_amass-ryrrr","steam","rbbrg" )]
+    [InlineData("cinch-rrrrr_soare-rrryy_lumpy-rrrrr_greet-ryygr_defer-rgygg","fewer","ggbgg" )]
     public void TestKeyboardColoring(string stateSerialized, string nextGuess, string nextGuessColors)
     {
         var state = GameStateSerialization.Deserialize(stateSerialized.ToUpperInvariant());

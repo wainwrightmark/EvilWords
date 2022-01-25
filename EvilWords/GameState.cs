@@ -20,7 +20,7 @@ public static class GameStateSerialization
 
     public static GameState Deserialize(string s)
     {
-        s = s.Trim('\'');
+        s = s.Trim('\'').ToUpperInvariant();
         if(string.IsNullOrWhiteSpace(s))
             return GameState.Empty;
 
